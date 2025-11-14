@@ -87,7 +87,7 @@ function OtpReset() {
             color: "#003366",
           }}
         >
-          🔁 Reset Password ({role === "admin" ? "Admin" : "Student"})
+           Reset Password ({role === "admin" ? "Admin" : "Student"})
         </h2>
 
         <p style={{ textAlign: "center", fontSize: "14px", color: "#555" }}>

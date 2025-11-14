@@ -89,7 +89,7 @@ function AdminDashboard() {
               cursor: "pointer",
             }}
           >
-            📄 Report Generator
+             Report Generator
           </button>
               
           <button
@@ -107,7 +107,7 @@ function AdminDashboard() {
               cursor: "pointer",
             }}
           >
-            🧠 AI Achievement Analyzer
+             AI Achievement Analyzer
           </button>
         </div>
 

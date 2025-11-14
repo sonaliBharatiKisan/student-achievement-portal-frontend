@@ -403,7 +403,7 @@ function Leaderboard() {
       {achievementOfTheDay.length > 0 && (
         <div style={styles.achievementOfDaySection}>
           <h3 style={styles.achievementTitle}>
-            ⭐ Achievement of the Day
+             Achievement of the Day
           </h3>
           <div style={styles.aodTableWrapper}>
             <table style={styles.aodTable}>
@@ -535,7 +535,7 @@ function Leaderboard() {
       {/* Leaderboard Section */}
       <div style={styles.header}>
         <h2 style={styles.title}>
-          <span style={styles.trophy}>🏆</span>
+          <span style={styles.trophy}></span>
           Top 5 Leaderboard
         </h2>
       </div>

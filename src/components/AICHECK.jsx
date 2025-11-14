@@ -4,7 +4,7 @@ import axios from 'axios';
 import './AICHECK.css';
 
 const AICHECK = () => {
-  console.log('🚀 AICHECK Component Rendering - COMPLETE MERGED VERSION');
+  console.log(' AICHECK Component Rendering - COMPLETE MERGED VERSION');
   
   // ===== STATE MANAGEMENT =====
   const [pendingAchievements, setPendingAchievements] = useState([]);
@@ -21,7 +21,7 @@ const AICHECK = () => {
 
   // ===== INITIAL DATA FETCH =====
   useEffect(() => {
-    console.log('📥 Fetching all data on component mount...');
+    console.log(' Fetching all data on component mount...');
     fetchPendingVerifications();
     fetchVerifiedAchievements();
     fetchRejectedAchievements();
@@ -34,12 +34,12 @@ const AICHECK = () => {
    */
   const fetchPendingVerifications = async () => {
     try {
-      console.log('📡 Fetching pending verifications...');
+      console.log('Fetching pending verifications...');
       const res = await axios.get('http://localhost:5000/api/verification/pending');
       console.log('✅ Pending data received:', res.data.count, 'items');
       setPendingAchievements(res.data.achievements || []);
     } catch (error) {
-      console.error('❌ Error fetching pending verifications:', error);
+      console.error(' Error fetching pending verifications:', error);
       alert('Failed to load pending verifications');
     }
   };
@@ -50,16 +50,16 @@ const AICHECK = () => {
    */
   const fetchVerifiedAchievements = async () => {
     try {
-      console.log('📡 Fetching verified achievements...');
+      console.log('Fetching verified achievements...');
       const url = statusFilter 
         ? `http://localhost:5000/api/verification/verified?status=${statusFilter}`
         : 'http://localhost:5000/api/verification/verified';
       
       const res = await axios.get(url);
-      console.log('✅ Verified data received:', res.data.count, 'items');
+      console.log(' Verified data received:', res.data.count, 'items');
       setVerifiedAchievements(res.data.achievements || []);
     } catch (error) {
-      console.error('❌ Error fetching verified achievements:', error);
+      console.error(' Error fetching verified achievements:', error);
     }
   };
 
@@ -68,14 +68,14 @@ const AICHECK = () => {
    */
   const fetchRejectedAchievements = async () => {
     try {
-      console.log('📡 Fetching rejected achievements...');
+      console.log(' Fetching rejected achievements...');
       const res = await axios.get('http://localhost:5000/api/verification/rejected');
-      console.log('✅ Rejected data received:', res.data.count, 'items');
-      console.log('✅ Rejected achievements:', res.data.achievements);
+      console.log(' Rejected data received:', res.data.count, 'items');
+      console.log(' Rejected achievements:', res.data.achievements);
       setRejectedAchievements(res.data.achievements || []);
     } catch (error) {
-      console.error('❌ Error fetching rejected achievements:', error);
-      console.error('❌ Error details:', error.response?.data || error.message);
+      console.error(' Error fetching rejected achievements:', error);
+      console.error(' Error details:', error.response?.data || error.message);
     }
   };
 
@@ -87,7 +87,7 @@ const AICHECK = () => {
   const handleVerifySingle = async (achievementId) => {
     setLoading(true);
     try {
-      console.log('🔍 Verifying achievement:', achievementId);
+      console.log(' Verifying achievement:', achievementId);
       const res = await axios.post(`http://localhost:5000/api/verification/verify/${achievementId}`);
       
       setVerificationResult(res.data.verificationResults);
@@ -106,7 +106,7 @@ const AICHECK = () => {
       
       alert(res.data.message || `Verification completed! Score: ${res.data.verificationResults.overallScore}%`);
     } catch (error) {
-      console.error('❌ Verification error:', error);
+      console.error(' Verification error:', error);
       alert(error.response?.data?.message || 'Verification failed');
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ const AICHECK = () => {
       fetchPendingVerifications();
       fetchVerifiedAchievements();
     } catch (error) {
-      console.error('❌ Bulk verification error:', error);
+      console.error(' Bulk verification error:', error);
       alert('Bulk verification failed');
     } finally {
       setBulkLoading(false);
@@ -156,13 +156,13 @@ const AICHECK = () => {
     // ===== VALIDATION: Cannot approve if score < 50 =====
     if (status === 'APPROVED') {
       if (!achievement.verificationScore || achievement.verificationScore < 50) {
-        alert(`❌ Cannot approve! Verification score (${achievement.verificationScore || 0}%) is below 50%.
+        alert(` Cannot approve! Verification score (${achievement.verificationScore || 0}%) is below 50%.
         
 Required: Score must be ≥ 50% to award points.`);
         return;
       }
       
-      if (!window.confirm(`✅ Approve this achievement?
+      if (!window.confirm(` Approve this achievement?
 
 Verification Score: ${achievement.verificationScore}%
 Estimated Points: ${achievement.basePoints || 'Not calculated'}
@@ -171,7 +171,7 @@ This will add points to the student's leaderboard!`)) {
         return;
       }
     } else {
-      if (!window.confirm(`❌ Reject this achievement? No points will be awarded.`)) {
+      if (!window.confirm(` Reject this achievement? No points will be awarded.`)) {
         return;
       }
     }
@@ -179,22 +179,22 @@ This will add points to the student's leaderboard!`)) {
     setEmailSending(true);
     
     try {
-      console.log(`🔄 Manual ${status}:`, achievementId);
+      console.log(` Manual ${status}:`, achievementId);
       
       const res = await axios.post(`http://localhost:5000/api/verification/manual/${achievementId}`, {
         status,
         adminNotes
       });
       
-      console.log('✅ Manual verification response:', res.data);
+      console.log(' Manual verification response:', res.data);
       
       const pointsMsg = res.data.pointsAwarded 
-        ? `\n\n🎉 ${res.data.pointsAwarded} points awarded to student!`
+        ? `\n\n ${res.data.pointsAwarded} points awarded to student!`
         : '';
       
       const emailMsg = res.data.emailSent 
-        ? '\n📧 Email notification sent successfully!'
-        : '\n⚠️ Email notification failed to send.';
+        ? '\n Email notification sent successfully!'
+        : '\n Email notification failed to send.';
       
       alert(res.data.message + pointsMsg + emailMsg);
       
@@ -202,24 +202,24 @@ This will add points to the student's leaderboard!`)) {
       setSelectedAchievement(null);
       setVerificationResult(null);
       
-      console.log('🔄 Refreshing all lists after', status);
+      console.log(' Refreshing all lists after', status);
       
       // Refresh all lists
       await fetchPendingVerifications();
       await fetchVerifiedAchievements();
       await fetchRejectedAchievements();
       
-      console.log('✅ All lists refreshed after', status);
+      console.log(' All lists refreshed after', status);
       
       // If rejected, switch to rejected tab
       if (status === 'REJECTED') {
-        console.log('🔴 Switching to Rejected tab');
+        console.log(' Switching to Rejected tab');
         setActiveTab('rejected');
       }
       
     } catch (error) {
-      console.error('❌ Manual verification error:', error);
-      console.error('❌ Error response:', error.response?.data);
+      console.error(' Manual verification error:', error);
+      console.error(' Error response:', error.response?.data);
       alert(error.response?.data?.error || error.response?.data?.message || 'Manual verification failed');
     } finally {
       setEmailSending(false);
@@ -295,11 +295,11 @@ This will add points to the student's leaderboard!`)) {
           <h4>{renderEventName(selectedAchievement)}</h4>
           <p><strong>Type:</strong> {selectedAchievement.type} - {selectedAchievement.category}</p>
           <p><strong>Student UCE:</strong> {selectedAchievement.uce_no}</p>
-          <p><strong>Student Email:</strong> {selectedAchievement.studentEmail || '⚠️ Not provided'}</p>
+          <p><strong>Student Email:</strong> {selectedAchievement.studentEmail || ' Not provided'}</p>
           <p><strong>Organizer:</strong> {renderOrganizer(selectedAchievement)}</p>
           {selectedAchievement.emailSent && (
             <p className="email-status" style={{color: '#10b981', fontWeight: 'bold'}}>
-              ✅ Email notification sent on {new Date(selectedAchievement.emailSentDate).toLocaleString()}
+              Email notification sent on {new Date(selectedAchievement.emailSentDate).toLocaleString()}
             </p>
           )}
         </div>
@@ -322,7 +322,7 @@ This will add points to the student's leaderboard!`)) {
             borderRadius: '8px',
             marginBottom: '1rem'
           }}>
-            <strong>⚠ Score Below Threshold</strong>
+            <strong> Score Below Threshold</strong>
             <p>Verification score is {verificationResult.overallScore}%. 
             Must be ≥ 50% to approve and award points.</p>
           </div>
@@ -331,7 +331,7 @@ This will add points to the student's leaderboard!`)) {
         {/* ===== VERIFIED FIELDS ===== */}
         {verificationResult.matches && verificationResult.matches.length > 0 && (
           <div className="matches-section">
-            <h4>✅ Verified Fields ({verificationResult.matches.length})</h4>
+            <h4>Verified Fields ({verificationResult.matches.length})</h4>
             <ul className="results-list">
               {verificationResult.matches.map((match, idx) => (
                 <li key={idx} className="match-item">
@@ -347,7 +347,7 @@ This will add points to the student's leaderboard!`)) {
         {/* ===== MISMATCHES ===== */}
         {verificationResult.mismatches && verificationResult.mismatches.length > 0 && (
           <div className="mismatches-section">
-            <h4>❌ Mismatches ({verificationResult.mismatches.length})</h4>
+            <h4> Mismatches ({verificationResult.mismatches.length})</h4>
             <ul className="results-list">
               {verificationResult.mismatches.map((mismatch, idx) => (
                 <li key={idx} className="mismatch-item">
@@ -373,7 +373,7 @@ This will add points to the student's leaderboard!`)) {
               borderRadius: '6px',
               marginBottom: '1rem'
             }}>
-              ⚠️ Warning: No student email found. Email notification will not be sent.
+               Warning: No student email found. Email notification will not be sent.
             </div>
           )}
 
@@ -385,7 +385,7 @@ This will add points to the student's leaderboard!`)) {
               borderRadius: '6px',
               marginBottom: '1rem'
             }}>
-              <strong>📊 Potential Points:</strong> {selectedAchievement.basePoints}
+              <strong> Potential Points:</strong> {selectedAchievement.basePoints}
             </div>
           )}
 
@@ -412,14 +412,14 @@ This will add points to the student's leaderboard!`)) {
               disabled={!canApprove || emailSending}
               title={!canApprove ? 'Score must be ≥ 50% to approve' : 'Approve and award points'}
             >
-              {emailSending ? '📧 Sending...' : `✓ Approve ${canApprove ? `(+${selectedAchievement.basePoints || 0} pts)` : ''}`}
+              {emailSending ? ' Sending...' : `✓ Approve ${canApprove ? `(+${selectedAchievement.basePoints || 0} pts)` : ''}`}
             </button>
             <button 
               className="reject-btn"
               onClick={() => handleManualVerification(selectedAchievement._id, 'REJECTED')}
               disabled={emailSending}
             >
-              {emailSending ? '📧 Sending...' : '✗ Reject & Notify'}
+              {emailSending ? ' Sending...' : '✗ Reject & Notify'}
             </button>
           </div>
 
@@ -430,7 +430,7 @@ This will add points to the student's leaderboard!`)) {
             marginTop: '0.5rem',
             textAlign: 'center'
           }}>
-            📧 Student will receive an email notification at: {selectedAchievement.studentEmail || 'N/A'}
+             Student will receive an email notification at: {selectedAchievement.studentEmail || 'N/A'}
           </p>
         </div>
 
@@ -443,7 +443,7 @@ This will add points to the student's leaderboard!`)) {
               rel="noopener noreferrer"
               className="view-cert-btn"
             >
-              📄 View Certificate
+               View Certificate
             </a>
           </div>
         )}
@@ -453,7 +453,7 @@ This will add points to the student's leaderboard!`)) {
 
   // ===== RENDER COMPONENT =====
 
-  console.log('📊 Current State:', {
+  console.log(' Current State:', {
     pending: pendingAchievements.length,
     verified: verifiedAchievements.length,
     rejected: rejectedAchievements.length,
@@ -464,7 +464,7 @@ This will add points to the student's leaderboard!`)) {
     <div className="aicheck-container">
       {/* ===== HEADER ===== */}
       <div className="aicheck-header">
-        <h2>🧠 AI Certificate Verification System</h2>
+        <h2> AI Certificate Verification System</h2>
         <p>Automatically verify achievement certificates using OCR technology</p>
         <div style={{
           background: '#fef3c7',
@@ -473,7 +473,7 @@ This will add points to the student's leaderboard!`)) {
           marginTop: '1rem',
           border: '2px solid #f59e0b'
         }}>
-          <strong>⚠ Important:</strong> Achievements must be manually APPROVED after verification. 
+          <strong>Important:</strong> Achievements must be manually APPROVED after verification. 
           Points are only awarded when score ≥ 50% AND status = APPROVED.
         </div>
       </div>
@@ -483,29 +483,29 @@ This will add points to the student's leaderboard!`)) {
         <button 
           className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
           onClick={() => {
-            console.log('🔵 Switching to Pending tab');
+            console.log('Switching to Pending tab');
             setActiveTab('pending');
           }}
         >
-          ⏳ Pending ({pendingAchievements.length})
+           Pending ({pendingAchievements.length})
         </button>
         <button 
           className={`tab-btn ${activeTab === 'verified' ? 'active' : ''}`}
           onClick={() => {
-            console.log('🟢 Switching to Verified tab');
+            console.log(' Switching to Verified tab');
             setActiveTab('verified');
           }}
         >
-          ✅ Verified ({verifiedAchievements.length})
+          Verified ({verifiedAchievements.length})
         </button>
         <button 
           className={`tab-btn ${activeTab === 'rejected' ? 'active' : ''}`}
           onClick={() => {
-            console.log('🔴 Switching to Rejected tab');
+            console.log(' Switching to Rejected tab');
             setActiveTab('rejected');
           }}
         >
-          ❌ Rejected ({rejectedAchievements.length})
+          Rejected ({rejectedAchievements.length})
         </button>
       </div>
 
@@ -520,14 +520,14 @@ This will add points to the student's leaderboard!`)) {
                 onClick={handleBulkVerify}
                 disabled={bulkLoading}
               >
-                {bulkLoading ? '⏳ Processing...' : '🚀 Verify All'}
+                {bulkLoading ? ' Processing...' : ' Verify All'}
               </button>
             )}
           </div>
 
           {pendingAchievements.length === 0 ? (
             <div className="empty-state">
-              <p>🎉 No pending verifications!</p>
+              <p> No pending verifications!</p>
             </div>
           ) : (
             <div className="achievements-grid">
@@ -541,7 +541,7 @@ This will add points to the student's leaderboard!`)) {
                     <p><strong>Type:</strong> {achievement.type}</p>
                     <p><strong>Category:</strong> {achievement.category}</p>
                     <p><strong>UCE:</strong> {achievement.uce_no}</p>
-                    <p><strong>Email:</strong> {achievement.studentEmail || '⚠️ Not provided'}</p>
+                    <p><strong>Email:</strong> {achievement.studentEmail || ' Not provided'}</p>
                     <p><strong>Organizer:</strong> {renderOrganizer(achievement)}</p>
                     {achievement.level && <p><strong>Level:</strong> {achievement.level}</p>}
                     {achievement.position && <p><strong>Position:</strong> {achievement.position}</p>}
@@ -555,7 +555,7 @@ This will add points to the student's leaderboard!`)) {
                       onClick={() => handleVerifySingle(achievement._id)}
                       disabled={loading}
                     >
-                      {loading ? '⏳ Verifying...' : '🔍 Verify Now'}
+                      {loading ? ' Verifying...' : ' Verify Now'}
                     </button>
                     {achievement.certificate && (
                       <a 
@@ -564,7 +564,7 @@ This will add points to the student's leaderboard!`)) {
                         rel="noopener noreferrer"
                         className="view-cert-link"
                       >
-                        📄 View
+                         View
                       </a>
                     )}
                   </div>
@@ -698,7 +698,7 @@ This will add points to the student's leaderboard!`)) {
 
           {rejectedAchievements.length === 0 ? (
             <div className="empty-state">
-              <p>✅ No rejected achievements</p>
+              <p> No rejected achievements</p>
             </div>
           ) : (
             <div className="verified-table-container">
@@ -752,7 +752,7 @@ This will add points to the student's leaderboard!`)) {
                               rel="noopener noreferrer"
                               className="view-cert-link"
                             >
-                              📄 View
+                               View
                             </a>
                           )}
                           <button 

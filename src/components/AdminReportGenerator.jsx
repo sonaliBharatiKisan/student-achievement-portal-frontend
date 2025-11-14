@@ -202,10 +202,10 @@ const AdminReportGenerator = () => {
         } : {}
       };
 
-      console.log("📤 Sending request:", requestData);
+      console.log("Sending request:", requestData);
 
       const res = await axios.post("http://localhost:5000/admin/report", requestData);
-      console.log("📥 Received response:", res.data);
+      console.log(" Received response:", res.data);
       
       if (!res.data || res.data.length === 0) {
         alert("No data found matching the selected filters. Try adjusting your filters.");
@@ -477,7 +477,7 @@ const AdminReportGenerator = () => {
           }}>
             <div>
               <h4 style={{ margin: 0, color: '#2e7d32', fontSize: '16px' }}>
-                📦 Export Complete Report
+                 Export Complete Report
               </h4>
               <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#666' }}>
                 Export all {reportData.length} records as a single comprehensive PDF
@@ -500,7 +500,7 @@ const AdminReportGenerator = () => {
               onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
               onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
             >
-              📄 Export All as PDF
+               Export All as PDF
             </button>
           </div>
         )}
@@ -554,10 +554,10 @@ const AdminReportGenerator = () => {
 
   return (
     <div className="report-generator">
-      <h1>📊 Admin Report Generator</h1>
+      <h1> Admin Report Generator</h1>
 
       <fieldset className="date-filter">
-        <legend>📅 Date Range Filter (Optional)</legend>
+        <legend> Date Range Filter (Optional)</legend>
         <div className="date-inputs">
           <label>
             Start Year:
@@ -585,7 +585,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset className="achievement-filter">
-        <legend>🏆 Achievement Filters</legend>
+        <legend> Achievement Filters</legend>
         
         <div className="achievement-type-selector">
           <label>Select Achievement Category:</label>
@@ -700,7 +700,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend>👩‍🎓 Student Fields ({selectedStudentFields.length})</legend>
+        <legend> Student Fields ({selectedStudentFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => setSelectedStudentFields([...studentFields])}>Select All</button>
           <button onClick={() => setSelectedStudentFields([])}>Clear All</button>
@@ -709,7 +709,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend>📘 Academic Fields ({selectedAcademicFields.length})</legend>
+        <legend>Academic Fields ({selectedAcademicFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => setSelectedAcademicFields([...academicFields])}>Select All</button>
           <button onClick={() => setSelectedAcademicFields([])}>Clear All</button>
@@ -718,7 +718,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend>🏅 Achievement Fields ({selectedAchievementFields.length})</legend>
+        <legend> Achievement Fields ({selectedAchievementFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => {
             const filtersEnabled = areFiltersEnabled();

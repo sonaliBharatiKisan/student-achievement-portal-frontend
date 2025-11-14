@@ -43,9 +43,9 @@ const SessionManager = ({ children }) => {
     sessionStorage.setItem('lastActivityTime', Date.now().toString());
   }, [location.pathname]);
 
-  // 🚪 LOGOUT HANDLER (manual only now)
+  //  LOGOUT HANDLER (manual only now)
   const handleLogout = useCallback(() => {
-    console.log("🚪 Logging out user — session expired or manual logout");
+    console.log(" Logging out user — session expired or manual logout");
     saveSessionInfo();
     const userType = getUserType();
 
@@ -68,7 +68,7 @@ const SessionManager = ({ children }) => {
     if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
-  // 🕒 RESET TIMER
+  //  RESET TIMER
   const resetTimer = useCallback(() => {
     if (isPublicPage || !isLoggedIn()) return;
 
@@ -79,7 +79,7 @@ const SessionManager = ({ children }) => {
     setIsWarning(false);
     setCountdown(30);
 
-    console.log("⏳ Session timer reset at:", new Date().toLocaleTimeString());
+    console.log(" Session timer reset at:", new Date().toLocaleTimeString());
 
     // ⚠️ Show warning before session expires
     warningRef.current = setTimeout(() => {
@@ -92,7 +92,7 @@ const SessionManager = ({ children }) => {
 
     // ❌ Session expired (no auto logout — just show modal)
     timeoutRef.current = setTimeout(() => {
-      console.log("⏰ Session expired! Showing modal, waiting for manual click...");
+      console.log(" Session expired! Showing modal, waiting for manual click...");
       clearAllTimers();
       setShowModal(true); // Stay until user clicks
     }, SESSION_TIMEOUT);
@@ -106,7 +106,7 @@ const SessionManager = ({ children }) => {
     if (lastActivity) {
       const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
       if (timeSinceLastActivity > SESSION_TIMEOUT) {
-        console.log("💤 Expired on reload — show modal");
+        console.log(" Expired on reload — show modal");
         setShowModal(true);
         return;
       }
@@ -175,7 +175,7 @@ const SessionManager = ({ children }) => {
       {isWarning && !showModal && (
         <div className="session-warning-overlay">
           <div className="session-warning-modal">
-            <div className="warning-icon">⚠️</div>
+            <div className="warning-icon"></div>
             <h2>Session Expiring Soon!</h2>
             <p>Your session will expire in <strong>{countdown} seconds</strong></p>
             <p className="warning-subtext">Click "Continue" to stay logged in</p>
@@ -195,12 +195,12 @@ const SessionManager = ({ children }) => {
       {showModal && (
         <div className="session-modal-overlay">
           <div className="session-modal">
-            <div className="modal-icon">🔒</div>
+            <div className="modal-icon"></div>
             <h2>Session Expired</h2>
             <p>Your session has expired due to inactivity.</p>
             <p className="sub-text">Please login again to continue.</p>
             <button className="login-btn" onClick={handleLoginAgain}>
-              🔐 Login Again
+               Login Again
             </button>
           </div>
         </div>

@@ -1051,7 +1051,7 @@ const res = await axios.post(
 
   return (
     <div className="card">
-      <h2>🎓 Achievement Portal</h2>
+      <h2> Achievement Portal</h2>
       <button className="main-btn" onClick={handleMainClick}>
         + Add New Achievement
       </button>
