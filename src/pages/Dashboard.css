@@ -1,0 +1,109 @@
+/* Full-screen background container */
+.dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 1s ease-in-out;
+  overflow: hidden;
+}
+
+/* Dark overlay */
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 0;
+}
+
+/* Content */
+.dashboard-content {
+  position: relative;
+  z-index: 1;
+  color: white;
+  animation: fadeIn 1.5s ease-in-out;
+  padding: 0 20px;
+}
+
+.dashboard-content h1 {
+  font-size: 2.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  animation: slideUp 1.2s ease-in-out;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.dashboard-content p {
+  font-size: 1.3rem;
+  max-width: 700px;
+  margin: 0 auto;
+  animation: fadeIn 2s ease-in-out;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
+}
+
+/* Animations for image transitions */
+.dashboard-container.fade {
+  animation: fadeAnim 1s ease-in-out;
+}
+
+.dashboard-container.zoom-in {
+  animation: zoomInAnim 1s ease-in-out;
+}
+
+.dashboard-container.zoom-out {
+  animation: zoomOutAnim 1s ease-in-out;
+}
+
+.dashboard-container.slide-left {
+  animation: slideLeftAnim 1s ease-in-out;
+}
+
+.dashboard-container.slide-right {
+  animation: slideRightAnim 1s ease-in-out;
+}
+
+/* Keyframes */
+@keyframes fadeAnim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomInAnim {
+  from { transform: scale(1.2); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes zoomOutAnim {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideLeftAnim {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideRightAnim {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Content animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

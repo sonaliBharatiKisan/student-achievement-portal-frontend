@@ -1,0 +1,54 @@
+.form-card {
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+.form-card h3 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-card label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.error {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background: #007bff;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.success-msg {
+  text-align: center;
+  color: green;
+  margin-top: 12px;
+}

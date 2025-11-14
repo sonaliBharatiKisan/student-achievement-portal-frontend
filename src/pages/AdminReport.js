@@ -1,0 +1,273 @@
+// ./pages/AdminReport.js
+import React, { useState, useEffect } from "react";
+import "./AdminReport.css";
+
+const AdminReport = () => {
+  const [fieldOptions, setFieldOptions] = useState({
+    student: [],
+    achievement: [],
+    academic: []
+  });
+
+  const [selectedStudentFields, setSelectedStudentFields] = useState([]);
+  const [selectedAchievementFields, setSelectedAchievementFields] = useState([]);
+  const [selectedAcademicFields, setSelectedAcademicFields] = useState([]);
+
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubType, setSelectedSubType] = useState("");
+
+  const [reportData, setReportData] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  // Mapping for categories and sub-types
+  const achievementSubTypes = {
+    "Co-Curricular": [
+      "Workshop",
+      "Project Competition",
+      "Paper Presentation",
+      "Paper Publication",
+      "Hackathon",
+      "Code Competition",
+      "Other"
+    ],
+    "Extra-Curricular": ["Sports", "Cultural"],
+    "Courses": ["COURSE_DYNAMIC"], // Handle dynamically
+    "Special Achievement": ["SPECIAL_DYNAMIC"] // Handle dynamically
+  };
+
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/get-fields");
+        const data = await response.json();
+        setFieldOptions(data);
+      } catch (error) {
+        console.error("Error fetching fields:", error);
+      }
+    };
+    fetchFields();
+  }, []);
+
+  const handleCheckboxChange = (field, category) => {
+    if (category === "student") {
+      setSelectedStudentFields((prev) =>
+        prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
+      );
+    } else if (category === "achievement") {
+      setSelectedAchievementFields((prev) =>
+        prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
+      );
+    } else if (category === "academic") {
+      setSelectedAcademicFields((prev) =>
+        prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
+      );
+    }
+  };
+
+  const fetchReport = async (subType) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/generate-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentFields: selectedStudentFields,
+          achievementFields: selectedAchievementFields,
+          academicFields: selectedAcademicFields,
+          filters: {
+            category: selectedCategory,
+            subType: subType
+          }
+        })
+      });
+      const data = await response.json();
+
+      // Filter only selected fields
+      const allSelectedFields = [
+        ...selectedStudentFields,
+        ...selectedAchievementFields,
+        ...selectedAcademicFields
+      ];
+      const filteredData = data.map((entry) => {
+        let filtered = {};
+        allSelectedFields.forEach((field) => {
+          filtered[field] = entry[field] ?? "Not Provided";
+        });
+        return filtered;
+      });
+
+      return filteredData;
+    } catch (error) {
+      console.error("Error generating report:", error);
+      return [];
+    }
+  };
+
+  const generateReport = async () => {
+    setLoading(true);
+    let results = {};
+
+    try {
+      if (selectedSubType === "ALL") {
+        let subTypesToProcess = [];
+
+        if (selectedCategory === "Co-Curricular") {
+          subTypesToProcess = achievementSubTypes["Co-Curricular"];
+        } else if (selectedCategory === "Extra-Curricular") {
+          subTypesToProcess = achievementSubTypes["Extra-Curricular"];
+        } else if (selectedCategory === "Courses") {
+          // Fetch distinct course names dynamically
+          const distinctRes = await fetch("http://localhost:5000/api/admin/get-distinct-courses");
+          const courses = await distinctRes.json();
+          subTypesToProcess = courses || [];
+        } else if (selectedCategory === "Special Achievement") {
+          // Fetch distinct achievements dynamically
+          const distinctRes = await fetch("http://localhost:5000/api/admin/get-distinct-achievements");
+          const specialTypes = await distinctRes.json();
+          subTypesToProcess = specialTypes || [];
+        }
+
+        for (const subType of subTypesToProcess) {
+          results[subType] = await fetchReport(subType);
+        }
+      } else {
+        const singleReport = await fetchReport(selectedSubType);
+        results[selectedSubType] = singleReport;
+      }
+
+      setReportData(results);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="admin-report">
+      <h2>Admin Report Generator</h2>
+
+      {/* Category Selector */}
+      <div className="field-section">
+        <h3>Achievement Category</h3>
+        <select
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setSelectedSubType("");
+          }}
+        >
+          <option value="">-- Select Category --</option>
+          {Object.keys(achievementSubTypes).map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Sub-type Selector */}
+      {selectedCategory && (
+        <div className="field-section">
+          <h3>Activity Type</h3>
+          <select
+            value={selectedSubType}
+            onChange={(e) => setSelectedSubType(e.target.value)}
+          >
+            <option value="">-- Select Activity --</option>
+            <option value="ALL">ALL</option>
+            {achievementSubTypes[selectedCategory]
+              .filter((t) => !t.includes("_DYNAMIC"))
+              .map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+          </select>
+        </div>
+      )}
+
+      {/* Student Fields */}
+      <div className="field-section">
+        <h3>Student Fields</h3>
+        {fieldOptions.student.map((field) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              value={field}
+              checked={selectedStudentFields.includes(field)}
+              onChange={() => handleCheckboxChange(field, "student")}
+            />
+            {field}
+          </label>
+        ))}
+      </div>
+
+      {/* Achievement Fields */}
+      <div className="field-section">
+        <h3>Achievement Fields</h3>
+        {fieldOptions.achievement.map((field) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              value={field}
+              checked={selectedAchievementFields.includes(field)}
+              onChange={() => handleCheckboxChange(field, "achievement")}
+            />
+            {field}
+          </label>
+        ))}
+      </div>
+
+      {/* Academic Fields */}
+      <div className="field-section">
+        <h3>Academic Fields</h3>
+        {fieldOptions.academic.map((field) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              value={field}
+              checked={selectedAcademicFields.includes(field)}
+              onChange={() => handleCheckboxChange(field, "academic")}
+            />
+            {field}
+          </label>
+        ))}
+      </div>
+
+      <button onClick={generateReport} disabled={loading}>
+        {loading ? "Generating..." : "Generate Report"}
+      </button>
+
+      {/* Report Output */}
+      <div className="report-output">
+        {Object.keys(reportData).length > 0 ? (
+          Object.entries(reportData).map(([subType, data]) => (
+            <div key={subType}>
+              <h3>{subType} Report ({data.length} records)</h3>
+              <table>
+                <thead>
+                  <tr>
+                    {[...selectedStudentFields, ...selectedAchievementFields, ...selectedAcademicFields].map(
+                      (field) => (
+                        <th key={field}>{field}</th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((row, idx) => (
+                    <tr key={idx}>
+                      {[...selectedStudentFields, ...selectedAchievementFields, ...selectedAcademicFields].map(
+                        (field) => (
+                          <td key={field}>{row[field]}</td>
+                        )
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        ) : (
+          <p>No report generated yet.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminReport;

@@ -1,0 +1,66 @@
+/* Admin Dashboard & Report Styles */
+
+.admin-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.admin-title {
+  font-size: 26px;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.admin-subtitle {
+  font-size: 20px;
+  margin: 15px 0;
+  color: #444;
+}
+
+.admin-section {
+  margin-bottom: 25px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.checkbox-label:hover {
+  background: #eef3ff;
+}
+
+.admin-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.admin-button:hover {
+  background: #125ea5;
+}

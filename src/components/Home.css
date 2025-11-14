@@ -1,0 +1,157 @@
+//Home.css
+
+/* ===== Reset Body Default Margin ===== */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* ===== Container Styling ===== */
+.home-container {
+  height: 100vh;
+  width: 100vw; /* ✅ Full screen width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+  position: relative;
+
+  /* 🎨 Animated gradient background (blue → teal) */
+  background: linear-gradient(135deg, #38ef7d, #2a5298, #38ef7d);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+
+  color: #fff;
+  text-align: center;
+  z-index: 1;
+}
+
+/* 🔄 Gradient Animation */
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ===== Floating Shapes for Extra Curricular Theme ===== */
+.home-container::before,
+.home-container::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.15;
+  z-index: 0;
+}
+
+.home-container::before {
+  width: 350px;
+  height: 350px;
+  top: -100px;
+  left: -120px;
+  background: #38ef7d;
+  animation: float 18s infinite alternate ease-in-out;
+}
+
+.home-container::after {
+  width: 300px;
+  height: 300px;
+  bottom: -120px;
+  right: -150px;
+  background: #2a5298;
+  animation: float 20s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0) rotate(0deg);
+  }
+  to {
+    transform: translateY(40px) rotate(360deg);
+  }
+}
+
+/* ===== Heading ===== */
+.home-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.home-subtitle {
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: -50px;
+  letter-spacing: 0.5px;
+  font-style: italic;
+  z-index: 1;
+}
+
+
+
+/* ===== Button Container ===== */
+.home-buttons {
+  display: flex;
+  gap: 60px;
+  z-index: 1;
+}
+
+/* ===== Wrapper for each button (Image + Label) ===== */
+.button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.button-wrapper:hover {
+  transform: translateY(-8px);
+}
+
+/* ===== Image Buttons ===== */
+.image-button {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(6px);
+}
+
+.image-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* ===== Labels Below Images ===== */
+.button-label {
+  margin-top: 14px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #f9f9f9;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 6px 18px;
+  border-radius: 12px;
+  letter-spacing: 1px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.button-wrapper:hover .button-label {
+  background: rgba(255, 255, 255, 0.85);
+  color: #38ef7d;
+}
