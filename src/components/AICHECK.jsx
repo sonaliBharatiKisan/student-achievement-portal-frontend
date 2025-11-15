@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AICHECK.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const AICHECK = () => {
   console.log(' AICHECK Component Rendering - COMPLETE MERGED VERSION');
   
@@ -35,7 +37,7 @@ const AICHECK = () => {
   const fetchPendingVerifications = async () => {
     try {
       console.log('Fetching pending verifications...');
-      const res = await axios.get('http://localhost:5000/api/verification/pending');
+      const res = await axios.get(`${API_BASE_URL}/api/verification/pending`);
       console.log('✅ Pending data received:', res.data.count, 'items');
       setPendingAchievements(res.data.achievements || []);
     } catch (error) {
@@ -52,8 +54,8 @@ const AICHECK = () => {
     try {
       console.log('Fetching verified achievements...');
       const url = statusFilter 
-        ? `http://localhost:5000/api/verification/verified?status=${statusFilter}`
-        : 'http://localhost:5000/api/verification/verified';
+        ? `${API_BASE_URL}/api/verification/verified?status=${statusFilter}`
+        : `${API_BASE_URL}/api/verification/verified`;
       
       const res = await axios.get(url);
       console.log(' Verified data received:', res.data.count, 'items');
@@ -69,7 +71,7 @@ const AICHECK = () => {
   const fetchRejectedAchievements = async () => {
     try {
       console.log(' Fetching rejected achievements...');
-      const res = await axios.get('http://localhost:5000/api/verification/rejected');
+      const res = await axios.get(`${API_BASE_URL}/api/verification/rejected`);
       console.log(' Rejected data received:', res.data.count, 'items');
       console.log(' Rejected achievements:', res.data.achievements);
       setRejectedAchievements(res.data.achievements || []);
@@ -88,7 +90,7 @@ const AICHECK = () => {
     setLoading(true);
     try {
       console.log(' Verifying achievement:', achievementId);
-      const res = await axios.post(`http://localhost:5000/api/verification/verify/${achievementId}`);
+      const res = await axios.post(`${API_BASE_URL}/api/verification/verify/${achievementId}`);
       
       setVerificationResult(res.data.verificationResults);
       
@@ -124,7 +126,7 @@ const AICHECK = () => {
     setBulkLoading(true);
     try {
       console.log('🚀 Starting bulk verification...');
-      const res = await axios.post('http://localhost:5000/api/verification/bulk-verify');
+      const res = await axios.post(`${API_BASE_URL}/api/verification/bulk-verify`);
       
       alert(`Bulk verification completed!\n
         Total: ${res.data.results.total}
@@ -181,7 +183,7 @@ This will add points to the student's leaderboard!`)) {
     try {
       console.log(` Manual ${status}:`, achievementId);
       
-      const res = await axios.post(`http://localhost:5000/api/verification/manual/${achievementId}`, {
+      const res = await axios.post(`${API_BASE_URL}/api/verification/manual/${achievementId}`, {
         status,
         adminNotes
       });
@@ -438,7 +440,7 @@ This will add points to the student's leaderboard!`)) {
         {selectedAchievement.certificate && (
           <div className="certificate-view">
             <a 
-              href={`http://localhost:5000/${selectedAchievement.certificate}`}
+              href={`${API_BASE_URL}/${selectedAchievement.certificate}`}
               target="_blank" 
               rel="noopener noreferrer"
               className="view-cert-btn"
@@ -559,7 +561,7 @@ This will add points to the student's leaderboard!`)) {
                     </button>
                     {achievement.certificate && (
                       <a 
-                        href={`http://localhost:5000/${achievement.certificate}`}
+                        href={`${API_BASE_URL}/${achievement.certificate}`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="view-cert-link"
@@ -747,7 +749,7 @@ This will add points to the student's leaderboard!`)) {
                         <div style={{display: 'flex', gap: '8px'}}>
                           {achievement.certificate && (
                             <a 
-                              href={`http://localhost:5000/${achievement.certificate}`}
+                              href={`${API_BASE_URL}/${achievement.certificate}`}
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="view-cert-link"

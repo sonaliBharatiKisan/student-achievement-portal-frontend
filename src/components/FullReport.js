@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./FullReport.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 // Friendly labels for fields
 const FIELD_LABELS = {
   // Student
@@ -110,7 +112,7 @@ const FullReport = () => {
       
       try {
         // Use the correct admin report endpoint
-        const res = await axios.post("http://localhost:5000/admin/report", {
+        const res = await axios.post(`${API_BASE_URL}/admin/report`, {
           studentFields: selectedStudentFields,
           academicFields: selectedAcademicFields,
           achievementFields: selectedAchievementFields,

@@ -2,6 +2,9 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
@@ -15,9 +18,10 @@ function ForgotPassword() {
   const handleReset = async () => {
     setLoading(true);
     try {
+      // ✅ Use environment variable for API endpoint
       const url = isAdmin
-        ? "http://localhost:5000/admin/forgot-password"
-        : "http://localhost:5000/api/auth/forgot-password";
+        ? `${API_BASE_URL}/admin/forgot-password`
+        : `${API_BASE_URL}/api/auth/forgot-password`;
 
       await axios.post(url, { email });
       localStorage.setItem("resetEmail", email);

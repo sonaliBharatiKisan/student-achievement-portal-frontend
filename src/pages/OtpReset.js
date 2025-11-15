@@ -4,6 +4,9 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 function OtpReset() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -24,10 +27,11 @@ function OtpReset() {
     }
 
     try {
+      // ✅ Use environment variable for API endpoint
       const url =
         role === "admin"
-          ? "http://localhost:5000/admin/reset-password"
-          : "http://localhost:5000/api/auth/reset-password";
+          ? `${API_BASE_URL}/admin/reset-password`
+          : `${API_BASE_URL}/api/auth/reset-password`;
 
       const response = await axios.post(url, {
         email,

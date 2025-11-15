@@ -2,6 +2,9 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -15,14 +18,15 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form, {
+      // ✅ Use environment variable for API endpoint
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, form, {
         headers: { "Content-Type": "application/json" },
       });
 
       if (res.data.success) {
         // ✅ Save token + student email consistently
         localStorage.setItem("token", res.data.token);
-         localStorage.setItem("uce_no", res.data.uce);
+        localStorage.setItem("uce_no", res.data.uce);
         localStorage.setItem("studentEmail", form.email); // ✅ FIX (this is what StudentForm will use)
 
         alert("✅ Login successful!");

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import AchievementForm from "../components/AchievementForm"; // ✅ fixed spelling
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function Achievements() {
   const [achievements, setAchievements] = useState([]);
   const [visibleCounts, setVisibleCounts] = useState({}); // Track visible rows per type
@@ -16,7 +18,7 @@ function Achievements() {
   const fetchAchievements = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/achievements/${email}`
+        `${API_BASE_URL}/api/achievements/${email}`
       );
       setAchievements(res.data || []);
     } catch (err) {

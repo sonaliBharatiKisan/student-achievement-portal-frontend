@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./StudentDetails.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const StudentDetails = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ const StudentDetails = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/admin/report", {
+      const response = await axios.post(`${API_BASE_URL}/admin/report`, {
         fields: ["USN", "Name", "DOB", "Gender", "Email", "Phone", "Department", "Year", "Semester"],
         filters: {},
       });

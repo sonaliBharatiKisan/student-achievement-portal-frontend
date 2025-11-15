@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "./AchievementForm.css";
 import axios from "axios";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const initialFormState = {
   organizerLocation: "",
   eventName: "",
@@ -114,16 +116,16 @@ function AchievementForm({ onSuccess }) {  // Added onSuccess prop
     try {
       const token = localStorage.getItem("token");
 
-const res = await axios.post(
-  "http://localhost:5000/api/achievements",
-  submissionData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`, // ✅ backend uses this to get uce_no
-    },
-  }
-);
+      const res = await axios.post(
+        `${API_BASE_URL}/api/achievements`,
+        submissionData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // ✅ backend uses this to get uce_no
+          },
+        }
+      );
 
       if (res.status === 201) { // Changed to 201 to match backend
         setSuccessMessage(res.data.message || "Achievement submitted successfully!");

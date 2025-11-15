@@ -8,6 +8,8 @@ import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import "./AdminReportGenerator.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const FIELD_LABELS = {
   USN: "USN",
   uce: "UCE/USN",
@@ -117,7 +119,7 @@ const AdminReportGenerator = () => {
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/admin/field-options");
+        const res = await axios.get(`${API_BASE_URL}/admin/field-options`);
         
         const filteredStudentFields = res.data.student.filter(
           field => field !== "alternatePhone" && field !== "alternateEmail"
@@ -204,7 +206,7 @@ const AdminReportGenerator = () => {
 
       console.log("Sending request:", requestData);
 
-      const res = await axios.post("http://localhost:5000/admin/report", requestData);
+      const res = await axios.post(`${API_BASE_URL}/admin/report`, requestData);
       console.log(" Received response:", res.data);
       
       if (!res.data || res.data.length === 0) {

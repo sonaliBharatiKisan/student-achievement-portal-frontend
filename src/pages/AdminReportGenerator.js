@@ -7,6 +7,9 @@ import autoTable from "jspdf-autotable";
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } from "docx";
 import { saveAs } from "file-saver";
 
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 const FIELD_LABELS = {
   uce: "UCE/USN",
   Name: "Name",
@@ -304,7 +307,8 @@ const AdminReportGenerator = () => {
       }
     }
 
-    const res = await axios.post("http://localhost:5000/admin/report", requestData);
+    // ✅ Use environment variable for API endpoint
+    const res = await axios.post(`${API_BASE_URL}/admin/report`, requestData);
     return res.data;
   };
 

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";  // ✅ Import Link
+import { useNavigate, Link } from "react-router-dom";
+
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 function Signup() {
   const [step, setStep] = useState(1);
@@ -12,7 +15,8 @@ function Signup() {
   // Step 1: Send OTP
   const sendOtp = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
+      // ✅ Use environment variable for API endpoint
+      await axios.post(`${API_BASE_URL}/api/auth/send-otp`, {
         email: form.email,
         uce: form.uce,
       });
@@ -26,23 +30,24 @@ function Signup() {
   // Step 2: Verify OTP and Create Password
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
   const verifyOtp = async () => {
-  if (!passwordRegex.test(form.password)) {
-    alert("❌ Password must be 8-32 chars, include 1 uppercase, 1 lowercase, 1 digit, and 1 special character.");
-    return;
-  }
-
-  try {
-    const res = await axios.post("http://localhost:5000/api/auth/verify-otp", form);
-    if (res.data.success) {
-      alert("Signup successful! Redirecting to login...");
-      navigate("/login");
-    } else {
-      alert(res.data.error || "OTP verification failed");
+    if (!passwordRegex.test(form.password)) {
+      alert("❌ Password must be 8-32 chars, include 1 uppercase, 1 lowercase, 1 digit, and 1 special character.");
+      return;
     }
-  } catch (err) {
-    alert(err.response?.data?.error || "OTP verification failed");
-  }
-};
+
+    try {
+      // ✅ Use environment variable for API endpoint
+      const res = await axios.post(`${API_BASE_URL}/api/auth/verify-otp`, form);
+      if (res.data.success) {
+        alert("Signup successful! Redirecting to login...");
+        navigate("/login");
+      } else {
+        alert(res.data.error || "OTP verification failed");
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || "OTP verification failed");
+    }
+  };
 
   return (
     <div
@@ -143,27 +148,26 @@ function Signup() {
                   marginTop: "5px",
                 }}
               />
-              </div>
-               <div style={{ marginBottom: "15px", textAlign: "left" }}>
-  <label>Password</label>
-  <input
-    type="password"
-    name="password"
-    placeholder="Create Password"
-    onChange={handleChange}
-    required
-    pattern={"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,32}$"}
-    title="Password must be 8-32 characters long and include 1 lowercase, 1 uppercase, 1 digit, and 1 special character."
-    style={{
-      width: "100%",
-      padding: "10px",
-      borderRadius: "6px",
-      border: "1px solid #ccc",
-      marginTop: "5px",
-    }}
-  />
-</div>
-
+            </div>
+            <div style={{ marginBottom: "15px", textAlign: "left" }}>
+              <label>Password</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Create Password"
+                onChange={handleChange}
+                required
+                pattern={"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,32}$"}
+                title="Password must be 8-32 characters long and include 1 lowercase, 1 uppercase, 1 digit, and 1 special character."
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  marginTop: "5px",
+                }}
+              />
+            </div>
 
             <button
               onClick={verifyOtp}

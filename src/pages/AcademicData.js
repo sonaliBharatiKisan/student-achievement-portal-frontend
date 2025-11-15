@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function AcademicForm() {
   const [uce, setUce] = useState(""); 
   const [educationType, setEducationType] = useState("");
@@ -21,14 +23,14 @@ function AcademicForm() {
         if (!token) return;
 
         const studentRes = await axios.get(
-          "http://localhost:5000/api/students/me",
+          `${API_BASE_URL}/api/students/me`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         setUce(studentRes.data.uce);
 
         const recordsRes = await axios.get(
-          "http://localhost:5000/api/academic",
+          `${API_BASE_URL}/api/academic`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -72,7 +74,7 @@ function AcademicForm() {
 
       const token=localStorage.getItem("token");
 
-      await axios.post("http://localhost:5000/api/academic", data, {
+      await axios.post(`${API_BASE_URL}/api/academic`, data, {
         headers: { "Content-Type": "multipart/form-data" ,
           Authorization: `Bearer ${token}`,
         },
@@ -90,7 +92,7 @@ function AcademicForm() {
   const fetchRecords = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/academic", {
+      const res = await axios.get(`${API_BASE_URL}/api/academic`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecords(res.data);
@@ -202,7 +204,7 @@ function AcademicForm() {
                   <td>
                     {r.marksheetUrl ? (
                       <a
-                        href={`http://localhost:5000${r.marksheetUrl}`}
+                        href={`${API_BASE_URL}${r.marksheetUrl}`}
                         target="_blank"
                         rel="noreferrer"
                       >

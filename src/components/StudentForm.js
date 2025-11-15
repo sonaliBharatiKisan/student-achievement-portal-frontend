@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../App.css";
 
-const API_BASE = "http://localhost:5000"; // keep your base as-is
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const INITIAL = {
   uce: "",
@@ -60,7 +60,7 @@ function StudentForm() {
       if (loggedInEmail) {
         try {
           const res = await axios.get(
-            `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
+            `${API_BASE_URL}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { headers: { "x-user-email": loggedInEmail } }
           );
           if (res.data?.success && res.data?.student) {
@@ -165,7 +165,7 @@ function StudentForm() {
     try {
       const logged = getLoggedInEmail();
       if (!logged) return;
-      await axios.post(`${API_BASE}/api/students`, payload, {
+      await axios.post(`${API_BASE_URL}/api/students`, payload, {
         headers: { "x-user-email": logged },
       });
       lastSavedRef.current = JSON.stringify(payload);
@@ -178,8 +178,8 @@ function StudentForm() {
     e.preventDefault();
     let newErrors = {};
 
-    if (!/^UCE\d{7}$/.test(formData.usn)) {
-      newErrors.usn = "❌ USN must be in format: UCE followed by 7 digits (e.g., UCE1234567).";
+    if (!/^UCE\d{7}$/.test(formData.uce)) {
+      newErrors.uce = "❌ USN must be in format: UCE followed by 7 digits (e.g., UCE1234567).";
     }
 
     if (!/^[A-Za-z\s]+$/.test(formData.name)) {
@@ -216,7 +216,7 @@ function StudentForm() {
         setMessage("❌ Please login first.");
         return;
       }
-      await axios.post(`${API_BASE}/api/students`, formData, {
+      await axios.post(`${API_BASE_URL}/api/students`, formData, {
         headers: { "x-user-email": logged },
       });
       setMessage("✅ Student details saved successfully!");
@@ -241,7 +241,7 @@ function StudentForm() {
       )}
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="usn">USN<span style={{ color: "red" }}>*</span></label>
+        <label htmlFor="uce">USN<span style={{ color: "red" }}>*</span></label>
         <input
           type="text"
           name="uce"
@@ -330,7 +330,7 @@ function StudentForm() {
         />
         {errors.phone && <p className="error">{errors.phone}</p>}
 
-        <label htmlFor="altPhone">Alternate Phone Number<span style={{ color: "red" }}>*</span></label>
+        <label htmlFor="altPhone">Alternate Phone Number</label>
         <input
           type="text"
           name="altPhone"
@@ -351,7 +351,7 @@ function StudentForm() {
           disabled
         />
 
-        <label htmlFor="altEmail">Alternate Email<span style={{ color: "red" }}>*</span></label>
+        <label htmlFor="altEmail">Alternate Email</label>
         <input
           type="email"
           name="altEmail"

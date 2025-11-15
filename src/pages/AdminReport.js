@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import "./AdminReport.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const AdminReport = () => {
   const [fieldOptions, setFieldOptions] = useState({
     student: [],
@@ -38,7 +40,7 @@ const AdminReport = () => {
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/admin/get-fields");
+        const response = await fetch(`${API_BASE_URL}/api/admin/get-fields`);
         const data = await response.json();
         setFieldOptions(data);
       } catch (error) {
@@ -66,7 +68,7 @@ const AdminReport = () => {
 
   const fetchReport = async (subType) => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/generate-report", {
+      const response = await fetch(`${API_BASE_URL}/api/admin/generate-report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -116,12 +118,12 @@ const AdminReport = () => {
           subTypesToProcess = achievementSubTypes["Extra-Curricular"];
         } else if (selectedCategory === "Courses") {
           // Fetch distinct course names dynamically
-          const distinctRes = await fetch("http://localhost:5000/api/admin/get-distinct-courses");
+          const distinctRes = await fetch(`${API_BASE_URL}/api/admin/get-distinct-courses`);
           const courses = await distinctRes.json();
           subTypesToProcess = courses || [];
         } else if (selectedCategory === "Special Achievement") {
           // Fetch distinct achievements dynamically
-          const distinctRes = await fetch("http://localhost:5000/api/admin/get-distinct-achievements");
+          const distinctRes = await fetch(`${API_BASE_URL}/api/admin/get-distinct-achievements`);
           const specialTypes = await distinctRes.json();
           subTypesToProcess = specialTypes || [];
         }

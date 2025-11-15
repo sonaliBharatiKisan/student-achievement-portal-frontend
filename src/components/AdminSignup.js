@@ -1,6 +1,9 @@
+// frontend/src/components/AdminSignup.js
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function AdminSignup() {
   const [step, setStep] = useState(1);
@@ -13,7 +16,7 @@ function AdminSignup() {
 
   const sendOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/admin/send-otp", {
+      const res = await axios.post(`${API_BASE_URL}/admin/send-otp`, {
         email: form.email,
       });
       setMessage(res.data.message);
@@ -25,7 +28,7 @@ function AdminSignup() {
 
   const verifyOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/admin/verify-otp", form);
+      const res = await axios.post(`${API_BASE_URL}/admin/verify-otp`, form);
       if (res.data.message === "Admin created successfully") {
         alert("Signup successful! Redirecting to login...");
         navigate("/admin/login");
