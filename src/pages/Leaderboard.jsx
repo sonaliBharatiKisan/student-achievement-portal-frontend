@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+// ✅ Add API base URL from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [achievementOfTheDay, setAchievementOfTheDay] = useState([]);
@@ -12,8 +15,8 @@ function Leaderboard() {
     async function fetchData() {
       try {
         const [leaderboardRes, achievementRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/leaderboard"),
-          axios.get("http://localhost:5000/api/achievement-of-the-day")
+          axios.get(`${API_BASE_URL}/api/leaderboard`),
+          axios.get(`${API_BASE_URL}/api/achievement-of-the-day`)
         ]);
         
         setLeaderboard(leaderboardRes.data.data || []);
@@ -403,7 +406,7 @@ function Leaderboard() {
       {achievementOfTheDay.length > 0 && (
         <div style={styles.achievementOfDaySection}>
           <h3 style={styles.achievementTitle}>
-             Achievement of the Day
+            🏆 Achievement of the Day
           </h3>
           <div style={styles.aodTableWrapper}>
             <table style={styles.aodTable}>
@@ -535,7 +538,7 @@ function Leaderboard() {
       {/* Leaderboard Section */}
       <div style={styles.header}>
         <h2 style={styles.title}>
-          <span style={styles.trophy}></span>
+          <span style={styles.trophy}>🏆</span>
           Top 5 Leaderboard
         </h2>
       </div>

@@ -76,7 +76,7 @@ function ForgotPassword() {
             color: "#003366",
           }}
         >
-          Forgot Password ({isAdmin ? "Admin" : "Student"})
+          🔒 Forgot Password ({isAdmin ? "Admin" : "Student"})
         </h2>
 
         <p style={{ textAlign: "center", fontSize: "14px", color: "#555" }}>
@@ -85,7 +85,7 @@ function ForgotPassword() {
 
         <input
           type="email"
-          placeholder=" Enter your email"
+          placeholder="📧 Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -115,7 +115,7 @@ function ForgotPassword() {
             transition: "background 0.3s ease",
           }}
         >
-          {loading ? "Sending..." : " Send OTP"}
+          {loading ? "Sending..." : "📨 Send OTP"}
         </button>
 
         {success && (
