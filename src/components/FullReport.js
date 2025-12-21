@@ -1,4 +1,4 @@
-// frontend/src/components/FullReport.js
+// frontend/src/components/FullReport.js - Atlas & Render Ready
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./FullReport.css";
@@ -111,6 +111,8 @@ const FullReport = () => {
       setError(null);
       
       try {
+        console.log("📡 Fetching full report from:", `${API_BASE_URL}/admin/report`);
+        
         // Use the correct admin report endpoint
         const res = await axios.post(`${API_BASE_URL}/admin/report`, {
           studentFields: selectedStudentFields,
@@ -119,11 +121,15 @@ const FullReport = () => {
           filters: {} // No filters for full report
         });
         
-        console.log("Full report data received:", res.data);
+        console.log("✅ Full report data received:", res.data.length, "records");
         setReportData(res.data);
       } catch (err) {
-        console.error("Error fetching full report:", err);
-        setError(err.response?.data?.message || "Failed to fetch report data");
+        console.error("❌ Error fetching full report:", err);
+        const errorMessage = err.response?.data?.message || 
+                           err.response?.data?.error || 
+                           err.message || 
+                           "Failed to fetch report data";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -139,29 +145,40 @@ const FullReport = () => {
       return;
     }
 
-    const allFields = [...selectedStudentFields, ...selectedAcademicFields, ...selectedAchievementFields];
-    const headers = allFields.map(field => FIELD_LABELS[field] || field);
-    
-    const csvContent = [
-      headers.join(","),
-      ...reportData.map(row => 
-        allFields.map(field => {
-          const value = row[field];
-          if (Array.isArray(value)) {
-            return `"${value.join("; ")}"`;
-          }
-          return `"${value || "-"}"`;
-        }).join(",")
-      )
-    ].join("\n");
+    try {
+      const allFields = [...selectedStudentFields, ...selectedAcademicFields, ...selectedAchievementFields];
+      const headers = allFields.map(field => FIELD_LABELS[field] || field);
+      
+      const csvContent = [
+        headers.join(","),
+        ...reportData.map(row => 
+          allFields.map(field => {
+            const value = row[field];
+            if (Array.isArray(value)) {
+              return `"${value.join("; ")}"`;
+            }
+            // Handle null, undefined, empty string
+            const displayValue = (value !== undefined && value !== null && value !== "") 
+              ? String(value).replace(/"/g, '""') // Escape quotes
+              : "-";
+            return `"${displayValue}"`;
+          }).join(",")
+        )
+      ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `full_report_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `full_report_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      console.log("✅ CSV exported successfully");
+    } catch (err) {
+      console.error("❌ Error exporting CSV:", err);
+      alert("Failed to export CSV. Please try again.");
+    }
   };
 
   if (loading) {
@@ -221,7 +238,7 @@ const FullReport = () => {
           </div>
         </div>
         <button onClick={exportToCSV} className="export-csv-btn">
-          Export to CSV
+          📥 Export to CSV
         </button>
       </div>
 

@@ -143,13 +143,14 @@ const AdminReport = () => {
   };
 
   return (
-    <div className="admin-report">
-      <h2>Admin Report Generator</h2>
+    <div className="admin-report-container">
+      <h2 className="admin-report-title">Admin Report Generator</h2>
 
       {/* Category Selector */}
-      <div className="field-section">
-        <h3>Achievement Category</h3>
+      <div className="report-field-section">
+        <h3 className="field-section-title">Achievement Category</h3>
         <select
+          className="report-select"
           value={selectedCategory}
           onChange={(e) => {
             setSelectedCategory(e.target.value);
@@ -165,9 +166,10 @@ const AdminReport = () => {
 
       {/* Sub-type Selector */}
       {selectedCategory && (
-        <div className="field-section">
-          <h3>Activity Type</h3>
+        <div className="report-field-section">
+          <h3 className="field-section-title">Activity Type</h3>
           <select
+            className="report-select"
             value={selectedSubType}
             onChange={(e) => setSelectedSubType(e.target.value)}
           >
@@ -183,89 +185,103 @@ const AdminReport = () => {
       )}
 
       {/* Student Fields */}
-      <div className="field-section">
-        <h3>Student Fields</h3>
-        {fieldOptions.student.map((field) => (
-          <label key={field}>
-            <input
-              type="checkbox"
-              value={field}
-              checked={selectedStudentFields.includes(field)}
-              onChange={() => handleCheckboxChange(field, "student")}
-            />
-            {field}
-          </label>
-        ))}
+      <div className="report-field-section">
+        <h3 className="field-section-title">Student Fields</h3>
+        <div className="report-checkbox-group">
+          {fieldOptions.student.map((field) => (
+            <label key={field} className="report-checkbox-label">
+              <input
+                type="checkbox"
+                value={field}
+                checked={selectedStudentFields.includes(field)}
+                onChange={() => handleCheckboxChange(field, "student")}
+              />
+              <span>{field}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Achievement Fields */}
-      <div className="field-section">
-        <h3>Achievement Fields</h3>
-        {fieldOptions.achievement.map((field) => (
-          <label key={field}>
-            <input
-              type="checkbox"
-              value={field}
-              checked={selectedAchievementFields.includes(field)}
-              onChange={() => handleCheckboxChange(field, "achievement")}
-            />
-            {field}
-          </label>
-        ))}
+      <div className="report-field-section">
+        <h3 className="field-section-title">Achievement Fields</h3>
+        <div className="report-checkbox-group">
+          {fieldOptions.achievement.map((field) => (
+            <label key={field} className="report-checkbox-label">
+              <input
+                type="checkbox"
+                value={field}
+                checked={selectedAchievementFields.includes(field)}
+                onChange={() => handleCheckboxChange(field, "achievement")}
+              />
+              <span>{field}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Academic Fields */}
-      <div className="field-section">
-        <h3>Academic Fields</h3>
-        {fieldOptions.academic.map((field) => (
-          <label key={field}>
-            <input
-              type="checkbox"
-              value={field}
-              checked={selectedAcademicFields.includes(field)}
-              onChange={() => handleCheckboxChange(field, "academic")}
-            />
-            {field}
-          </label>
-        ))}
+      <div className="report-field-section">
+        <h3 className="field-section-title">Academic Fields</h3>
+        <div className="report-checkbox-group">
+          {fieldOptions.academic.map((field) => (
+            <label key={field} className="report-checkbox-label">
+              <input
+                type="checkbox"
+                value={field}
+                checked={selectedAcademicFields.includes(field)}
+                onChange={() => handleCheckboxChange(field, "academic")}
+              />
+              <span>{field}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
-      <button onClick={generateReport} disabled={loading}>
+      <button 
+        className="report-generate-button" 
+        onClick={generateReport} 
+        disabled={loading}
+      >
         {loading ? "Generating..." : "Generate Report"}
       </button>
 
       {/* Report Output */}
-      <div className="report-output">
+      <div className="report-output-section">
         {Object.keys(reportData).length > 0 ? (
           Object.entries(reportData).map(([subType, data]) => (
-            <div key={subType}>
-              <h3>{subType} Report ({data.length} records)</h3>
-              <table>
-                <thead>
-                  <tr>
-                    {[...selectedStudentFields, ...selectedAchievementFields, ...selectedAcademicFields].map(
-                      (field) => (
-                        <th key={field}>{field}</th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row, idx) => (
-                    <tr key={idx}>
+            <div key={subType} className="report-result-block">
+              <h3 className="report-result-title">
+                {subType} Report ({data.length} records)
+              </h3>
+              <div className="report-table-wrapper">
+                <table className="report-data-table">
+                  <thead>
+                    <tr>
                       {[...selectedStudentFields, ...selectedAchievementFields, ...selectedAcademicFields].map(
                         (field) => (
-                          <td key={field}>{row[field]}</td>
+                          <th key={field}>{field}</th>
                         )
                       )}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.map((row, idx) => (
+                      <tr key={idx}>
+                        {[...selectedStudentFields, ...selectedAchievementFields, ...selectedAcademicFields].map(
+                          (field) => (
+                            <td key={field}>{row[field]}</td>
+                          )
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))
         ) : (
-          <p>No report generated yet.</p>
+          <p className="report-empty-message">No report generated yet.</p>
         )}
       </div>
     </div>

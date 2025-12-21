@@ -1,199 +1,238 @@
 import { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
-
-// ✅ Add API base URL from environment variable
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 function Signup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: "", uce: "", otp: "", password: "" });
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
+  };
 
   // Step 1: Send OTP
   const sendOtp = async () => {
+    setError("");
+    setSuccess("");
+    
+    // Email domain validation
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@cumminscollege\.in$/;
+    if (!emailPattern.test(form.email)) {
+      setError("❌ Invalid email ID. Must be a cumminscollege.in email");
+      return;
+    }
+
+    // UCE number validation
+    const ucePattern = /^UCE\d{7,8}$/i;
+    if (!ucePattern.test(form.uce)) {
+      setError("❌ Invalid UCE number. Format: UCE followed by 7 or 8 digits");
+      return;
+    }
+
+    setLoading(true);
     try {
-      // ✅ Use environment variable for API endpoint
-      await axios.post(`${API_BASE_URL}/api/auth/send-otp`, {
-        email: form.email,
-        uce: form.uce,
+      const response = await fetch("https://your-api-url.com/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          uce: form.uce,
+        }),
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send OTP");
+      }
+
       setStep(2);
-      alert("OTP sent to your email!");
+      setSuccess("✅ OTP sent to your email!");
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to send OTP");
+      setError(err.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
     }
   };
 
   // Step 2: Verify OTP and Create Password
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
   const verifyOtp = async () => {
+    setError("");
+    setSuccess("");
+    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
     if (!passwordRegex.test(form.password)) {
-      alert("❌ Password must be 8-32 chars, include 1 uppercase, 1 lowercase, 1 digit, and 1 special character.");
+      setError("❌ Password must be 8-32 chars with uppercase, lowercase, digit & special character");
       return;
     }
 
+    setLoading(true);
     try {
-      // ✅ Use environment variable for API endpoint
-      const res = await axios.post(`${API_BASE_URL}/api/auth/verify-otp`, form);
-      if (res.data.success) {
-        alert("Signup successful! Redirecting to login...");
-        navigate("/login");
+      const response = await fetch("https://your-api-url.com/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "OTP verification failed");
+      }
+
+      if (data.success) {
+        setSuccess("✅ Signup successful! You can now login.");
+        setTimeout(() => setStep(3), 2000);
       } else {
-        alert(res.data.error || "OTP verification failed");
+        setError(data.error || "OTP verification failed");
       }
     } catch (err) {
-      alert(err.response?.data?.error || "OTP verification failed");
+      setError(err.message || "OTP verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        backgroundImage: "url('/cummins.png')",
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        minHeight: "100vh",
-        width: "100vw",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 400,
-          width: "100%",
-          padding: "30px",
-          background: "rgba(255,255,255,0.9)",
-          borderRadius: "12px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px", color: "#003366" }}>Signup</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Student Signup</h2>
+          <p className="text-gray-600">Create your account to get started</p>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+            {success}
+          </div>
+        )}
 
         {step === 1 && (
-          <div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
-              <label>Email</label>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
               <input
                 name="email"
-                placeholder="Enter your Email"
+                type="email"
+                placeholder="student@cumminscollege.in"
                 onChange={handleChange}
+                value={form.email}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
             </div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
-              <label>UCE Number</label>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                UCE Number
+              </label>
               <input
                 name="uce"
-                placeholder="Enter UCE Number"
+                placeholder="UCE1234567"
                 onChange={handleChange}
+                value={form.uce}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Format: UCE followed by 7-8 digits
+              </p>
             </div>
+            
             <button
               onClick={sendOtp}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "linear-gradient(to right, #28a745, #218838)",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
+              disabled={loading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send OTP
+              {loading ? "Sending..." : "Send OTP"}
             </button>
           </div>
         )}
 
         {step === 2 && (
-          <div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
-              <label>OTP</label>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                OTP Code
+              </label>
               <input
                 name="otp"
-                placeholder="Enter OTP"
+                placeholder="Enter 6-digit OTP"
                 onChange={handleChange}
+                value={form.otp}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                maxLength="6"
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
             </div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
-              <label>Password</label>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Create Password
+              </label>
               <input
                 type="password"
                 name="password"
-                placeholder="Create Password"
+                placeholder="••••••••"
                 onChange={handleChange}
+                value={form.password}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 required
-                pattern={"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,32}$"}
-                title="Password must be 8-32 characters long and include 1 lowercase, 1 uppercase, 1 digit, and 1 special character."
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                8-32 characters with uppercase, lowercase, digit & special character
+              </p>
             </div>
 
             <button
               onClick={verifyOtp}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "linear-gradient(to right, #26b848ff, #26b848ff )",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
+              disabled={loading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Verify & Signup
+              {loading ? "Verifying..." : "Verify & Signup"}
+            </button>
+            
+            <button
+              onClick={() => setStep(1)}
+              className="w-full text-indigo-600 hover:text-indigo-700 font-medium py-2 text-sm"
+            >
+              ← Back to Email Entry
             </button>
           </div>
         )}
 
-        {/* ✅ Add Login Link */}
-        <p style={{ marginTop: "15px" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ color: "#003366", fontWeight: "bold" }}>
-            Login here
-          </Link>
-        </p>
+        {step === 3 && (
+          <div className="text-center py-8">
+            <div className="text-6xl mb-4">✅</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Success!</h3>
+            <p className="text-gray-600 mb-6">Your account has been created successfully.</p>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg transition"
+            >
+              Go to Login
+            </button>
+          </div>
+        )}
+
+        {step !== 3 && (
+          <p className="text-center text-sm text-gray-600 mt-6">
+            Already have an account?{" "}
+            <a href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Login here
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

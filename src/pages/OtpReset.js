@@ -11,6 +11,7 @@ function OtpReset() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const email = localStorage.getItem("resetEmail");
@@ -26,6 +27,7 @@ function OtpReset() {
       return;
     }
 
+    setLoading(true);
     try {
       // ✅ Use environment variable for API endpoint
       const url =
@@ -42,13 +44,18 @@ function OtpReset() {
       if (response.data.success) {
         setMessage("✅ Password reset successful! Redirecting...");
         setTimeout(() => {
+          localStorage.removeItem("resetEmail");
+          localStorage.removeItem("resetRole");
           navigate(role === "admin" ? "/admin/login" : "/login");
         }, 2000);
       } else {
         setMessage(response.data.error || "❌ Reset failed");
       }
     } catch (err) {
+      console.error("Password reset error:", err);
       setMessage(err.response?.data?.error || "❌ Reset failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,7 +98,7 @@ function OtpReset() {
             color: "#003366",
           }}
         >
-           Reset Password ({role === "admin" ? "Admin" : "Student"})
+          🔁 Reset Password ({role === "admin" ? "Admin" : "Student"})
         </h2>
 
         <p style={{ textAlign: "center", fontSize: "14px", color: "#555" }}>
@@ -107,6 +114,7 @@ function OtpReset() {
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
           required
+          maxLength={6}
           style={{
             padding: "10px",
             fontSize: "14px",
@@ -138,19 +146,23 @@ function OtpReset() {
 
         <button
           type="submit"
+          disabled={loading}
           style={{
             padding: "10px",
-            background: "linear-gradient(to right, #28a745, #218838)",
+            background: loading 
+              ? "#cccccc" 
+              : "linear-gradient(to right, #28a745, #218838)",
             color: "#fff",
             fontWeight: "bold",
             fontSize: "16px",
             border: "none",
             borderRadius: "6px",
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             transition: "background 0.3s ease",
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Reset Password
+          {loading ? "Resetting..." : "Reset Password"}
         </button>
 
         {message && (
@@ -160,6 +172,7 @@ function OtpReset() {
               textAlign: "center",
               fontSize: "14px",
               color: message.includes("✅") ? "#28a745" : "#dc3545",
+              fontWeight: "500",
             }}
           >
             {message}

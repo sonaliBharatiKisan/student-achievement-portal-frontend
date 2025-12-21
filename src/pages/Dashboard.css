@@ -1,27 +1,22 @@
-/* Full-screen background container */
+/* Container */
 .dashboard-container {
   position: relative;
   min-height: 100vh;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  transition: background-image 1s ease-in-out;
   overflow: hidden;
 }
 
-/* Dark overlay */
+/* Overlay */
 .image-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.3),
+    rgba(0,0,0,0.7)
+  );
   z-index: 0;
 }
 
@@ -30,80 +25,92 @@
   position: relative;
   z-index: 1;
   color: white;
-  animation: fadeIn 1.5s ease-in-out;
+  text-align: center;
   padding: 0 20px;
 }
 
-.dashboard-content h1 {
-  font-size: 2.8rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  animation: slideUp 1.2s ease-in-out;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+/* Animations */
+.dashboard-container.fade { animation: fade 0.8s ease; }
+.dashboard-container.zoom-in { animation: zoomIn 0.8s ease; }
+.dashboard-container.zoom-out { animation: zoomOut 0.8s ease; }
+.dashboard-container.slide-left { animation: slideLeft 0.6s ease; }
+.dashboard-container.slide-right { animation: slideRight 0.6s ease; }
+
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoomIn { from { transform: scale(1.15); } to { transform: scale(1); } }
+@keyframes zoomOut { from { transform: scale(0.85); } to { transform: scale(1); } }
+@keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes slideRight { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+/* SIDE BUTTONS (YouTube Style) */
+.side-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 55px;
+  height: 55px;
+  background: rgba(0,0,0,0.45);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  z-index: 3;
 }
 
-.dashboard-content p {
-  font-size: 1.3rem;
-  max-width: 700px;
-  margin: 0 auto;
-  animation: fadeIn 2s ease-in-out;
-  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
+.side-btn::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-top: 4px solid white;
+  border-right: 4px solid white;
+  top: 50%;
+  left: 50%;
 }
 
-/* Animations for image transitions */
-.dashboard-container.fade {
-  animation: fadeAnim 1s ease-in-out;
+.left-btn { left: 20px; }
+.left-btn::before {
+  transform: translate(-40%, -50%) rotate(-135deg);
 }
 
-.dashboard-container.zoom-in {
-  animation: zoomInAnim 1s ease-in-out;
+.right-btn { right: 20px; }
+.right-btn::before {
+  transform: translate(-60%, -50%) rotate(45deg);
 }
 
-.dashboard-container.zoom-out {
-  animation: zoomOutAnim 1s ease-in-out;
+.side-btn:hover {
+  background: rgba(0,0,0,0.7);
 }
 
-.dashboard-container.slide-left {
-  animation: slideLeftAnim 1s ease-in-out;
+/* PLAY / PAUSE CENTER */
+.play-pause-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  z-index: 3;
 }
 
-.dashboard-container.slide-right {
-  animation: slideRightAnim 1s ease-in-out;
+.play-pause-btn::before {
+  content: "▶";
+  color: white;
+  font-size: 2.2rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-45%, -50%);
 }
 
-/* Keyframes */
-@keyframes fadeAnim {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.play-pause-btn.playing::before {
+  content: "⏸";
+  transform: translate(-50%, -50%);
 }
 
-@keyframes zoomInAnim {
-  from { transform: scale(1.2); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-@keyframes zoomOutAnim {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-@keyframes slideLeftAnim {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideRightAnim {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* Content animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.play-pause-btn:hover {
+  background: rgba(0,0,0,0.8);
 }

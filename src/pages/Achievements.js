@@ -1,13 +1,14 @@
 // frontend/src/pages/Achievements.js
 import { useEffect, useState } from "react";
 import axios from "axios";
-import AchievementForm from "../components/AchievementForm"; // ✅ fixed spelling
+import AchievementForm from "../components/AchievementForm";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Achievements() {
   const [achievements, setAchievements] = useState([]);
-  const [visibleCounts, setVisibleCounts] = useState({}); // Track visible rows per type
+  const [visibleCounts, setVisibleCounts] = useState({});
+  const [editingAchievement, setEditingAchievement] = useState(null);
 
   const email =
     localStorage.getItem("studentEmail") ||
@@ -31,6 +32,41 @@ function Achievements() {
     fetchAchievements();
   }, []);
 
+  // ✅ Delete Achievement
+  const handleDelete = async (achievementId) => {
+    if (!window.confirm("Are you sure you want to delete this achievement?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.delete(
+        `${API_BASE_URL}/api/achievements/${achievementId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.status === 200) {
+        alert("Achievement deleted successfully!");
+        fetchAchievements(); // Refresh list
+      }
+    } catch (err) {
+      console.error("Delete Error:", err);
+      alert("Failed to delete achievement");
+    }
+  };
+
+  // ✅ Edit Achievement
+  const handleEdit = (achievement) => {
+    setEditingAchievement(achievement);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAchievement(null);
+  };
+
   // ---------- helpers ----------
   const renderEventName = (ach) => {
     if (ach.eventName) return ach.eventName;
@@ -44,19 +80,47 @@ function Achievements() {
   };
 
   const renderDate = (ach) => {
-    if (ach.eventDate) return new Date(ach.eventDate).toLocaleDateString();
+    console.group(`📅 Rendering date for: ${renderEventName(ach)}`);
+    console.log("Date Selection:", ach.dateSelection);
+    console.log("Event Date:", ach.eventDate);
+    console.log("Event From:", ach.eventFrom);
+    console.log("Event To:", ach.eventTo);
+    console.groupEnd();
+
+    // ✅ Check for date range
+    if (ach.dateSelection === "range") {
+      if (ach.eventFrom && ach.eventTo) {
+        const fromDate = new Date(ach.eventFrom).toLocaleDateString();
+        const toDate = new Date(ach.eventTo).toLocaleDateString();
+        return `${fromDate} - ${toDate}`;
+      }
+    }
+
+    // ✅ Check for single date
+    if (ach.dateSelection === "single" && ach.eventDate) {
+      return new Date(ach.eventDate).toLocaleDateString();
+    }
+
+    // ✅ Fallback for legacy records
+    if (ach.eventDate) {
+      return new Date(ach.eventDate).toLocaleDateString();
+    }
+
     if (ach.publicationDate)
       return new Date(ach.publicationDate).toLocaleDateString();
+
     if (ach.startMonth && ach.startYear && ach.endMonth && ach.endYear) {
       return `${ach.startMonth} ${ach.startYear} - ${ach.endMonth} ${ach.endYear}`;
     }
     if (ach.startMonth && ach.startYear) {
       return `${ach.startMonth} ${ach.startYear} - Present`;
     }
+
     if (ach.awardMonth && ach.awardYear)
       return `${ach.awardMonth} ${ach.awardYear}`;
     if (ach.awardStartYear)
       return `${ach.awardStartYear} - ${ach.awardEndYear || "Present"}`;
+
     return "-";
   };
 
@@ -87,7 +151,6 @@ function Achievements() {
     return info.length > 0 ? info.join(" | ") : "-";
   };
 
-  // ✅ keep working certificate rendering
   const renderCertificateCell = (ach) => {
     if (ach.certificatePath) {
       return (
@@ -115,9 +178,9 @@ function Achievements() {
     const baseHeaders = ["Category", "Event/Course Name", "Date"];
     switch (type) {
       case "Special Achievement":
-        return [...baseHeaders, "Amount", "Organization", "Certificate"];
+        return [...baseHeaders, "Amount", "Organization", "Certificate", "Actions"];
       case "Courses":
-        return [...baseHeaders, "Duration", "Certificate"];
+        return [...baseHeaders, "Duration", "Certificate", "Actions"];
       case "Paper Publication":
         return [
           ...baseHeaders,
@@ -126,6 +189,7 @@ function Achievements() {
           "Indexing",
           "Additional Info",
           "Certificate",
+          "Actions"
         ];
       default:
         return [
@@ -136,6 +200,7 @@ function Achievements() {
           "Organizer",
           "Additional Info",
           "Certificate",
+          "Actions"
         ];
     }
   };
@@ -147,6 +212,44 @@ function Achievements() {
       <td key="date">{renderDate(ach)}</td>,
     ];
 
+    // ✅ Action buttons column
+    const actionColumn = (
+      <td key="actions">
+        <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
+          <button
+            onClick={() => handleEdit(ach)}
+            style={{
+              background: "#007bff",
+              color: "white",
+              border: "none",
+              padding: "5px 10px",
+              cursor: "pointer",
+              borderRadius: "4px",
+              fontSize: "12px"
+            }}
+            title="Edit Achievement"
+          >
+            ✏ Edit
+          </button>
+          <button
+            onClick={() => handleDelete(ach._id)}
+            style={{
+              background: "#dc3545",
+              color: "white",
+              border: "none",
+              padding: "5px 10px",
+              cursor: "pointer",
+              borderRadius: "4px",
+              fontSize: "12px"
+            }}
+            title="Delete Achievement"
+          >
+            🗑 Delete
+          </button>
+        </div>
+      </td>
+    );
+
     switch (type) {
       case "Special Achievement":
         return [
@@ -154,6 +257,7 @@ function Achievements() {
           <td key="amount">{ach.amount || "-"}</td>,
           <td key="org">{renderOrganizer(ach)}</td>,
           <td key="cert">{renderCertificateCell(ach)}</td>,
+          actionColumn
         ];
       case "Courses":
         return [
@@ -166,6 +270,7 @@ function Achievements() {
               : "-"}
           </td>,
           <td key="cert">{renderCertificateCell(ach)}</td>,
+          actionColumn
         ];
       case "Paper Publication":
         return [
@@ -175,6 +280,7 @@ function Achievements() {
           <td key="indexing">{ach.indexing || "-"}</td>,
           <td key="info">{renderAdditionalInfo(ach)}</td>,
           <td key="cert">{renderCertificateCell(ach)}</td>,
+          actionColumn
         ];
       default:
         return [
@@ -185,6 +291,7 @@ function Achievements() {
           <td key="organizer">{renderOrganizer(ach)}</td>,
           <td key="info">{renderAdditionalInfo(ach)}</td>,
           <td key="cert">{renderCertificateCell(ach)}</td>,
+          actionColumn
         ];
     }
   };
@@ -209,8 +316,15 @@ function Achievements() {
         Student Achievements
       </h2>
 
-      {/* ✅ keep refresh after upload */}
-      <AchievementForm onSuccess={fetchAchievements} />
+      {/* ✅ Pass editing state to form */}
+      <AchievementForm
+        onSuccess={() => {
+          fetchAchievements();
+          setEditingAchievement(null);
+        }}
+        editingAchievement={editingAchievement}
+        onCancelEdit={handleCancelEdit}
+      />
 
       {Object.keys(groupedAchievements).length > 0 ? (
         <div>
@@ -247,7 +361,6 @@ function Achievements() {
                   </table>
                 </div>
 
-                {/* See More / See Less */}
                 {typeAchievements.length > 5 && (
                   <div style={{ textAlign: "center", marginTop: "10px" }}>
                     {visibleCount < typeAchievements.length && (

@@ -1,4 +1,4 @@
-// frontend/src/App.js
+//frontend/src/App.js
 import AICheck from "./components/AICHECK";
 
 import { Routes, Route, useLocation } from "react-router-dom";
@@ -19,7 +19,9 @@ import StudentDetails from "./components/StudentDetails";
 import AdminReportGenerator from "./components/AdminReportGenerator";
 import FullReport from "./components/FullReport";
 import Leaderboard from "./pages/Leaderboard";
-// ✅ NEW IMPORT - Session Manager
+import StudentStats from "./pages/StudentStats"; // ✅ NEW IMPORT
+// ✅ REMOVED - AchievementStats import (moved to admin only)
+// ✅ Session Manager
 import SessionManager from "./components/SessionManager";
 
 import "./App.css";
@@ -37,7 +39,6 @@ function AppWrapper() {
     location.pathname.startsWith("/admin");
 
   return (
-    // ✅ WRAPPED EVERYTHING WITH SessionManager (NEW)
     <SessionManager>
       <div style={{ display: "flex" }}>
         {/* Sidebar (hidden on auth pages & Home & admin pages) */}
@@ -69,6 +70,12 @@ function AppWrapper() {
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/academic" element={<AcademicData />} />
             <Route path="/leaderboard" element={<Leaderboard/>}/>
+            
+            {/* ✅ NEW - Student Stats Route */}
+            <Route path="/student-stats" element={<StudentStats />} />
+            
+            {/* ✅ REMOVED - Achievement Stats Route (now admin only) */}
+
             {/* Admin Pages */}
             <Route path="/admin/signup" element={<AdminSignup />} />
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -78,12 +85,11 @@ function AppWrapper() {
             <Route path="/admin/student-details" element={<StudentDetails />} />
             <Route path="/admin/report" element={<AdminReportGenerator />} />
             <Route path="/admin/full-report" element={<FullReport />} />
-            <Route path="/admin/ai-check" element={<AICheck />} /> {/* ✅ Fixed */}
+            <Route path="/admin/ai-check" element={<AICheck />} />
           </Routes>
         </div>
       </div>
     </SessionManager>
-    // ✅ CLOSED SessionManager WRAPPER (NEW)
   );
 }
 

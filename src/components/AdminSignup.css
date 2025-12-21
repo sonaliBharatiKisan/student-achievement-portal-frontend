@@ -1,9 +1,9 @@
 /* ============================================
-   ADMIN LOGIN PAGE - PROFESSIONAL DESIGN
+   ADMIN SIGNUP PAGE - PROFESSIONAL DESIGN
    ============================================ */
 
 /* Page Background with Image */
-.admin-login-page {
+.admin-signup-page {
   background-image: url('/public/cummins.png');
   background-size: cover;
   background-repeat: no-repeat;
@@ -19,50 +19,57 @@
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Admin Login Form Container */
-.admin-login-form {
+/* Admin Signup Container */
+.admin-signup-container {
   max-width: 450px;
   width: 100%;
   padding: 40px;
   background: linear-gradient(135deg, #e6f2ff 0%, #f0f8ff 100%);
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(26, 35, 126, 0.3);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  text-align: center;
   border: 3px solid #1a237e;
 }
 
 /* Title */
-.admin-login-title {
-  text-align: center;
+.admin-signup-title {
   margin-bottom: 20px;
-  font-size: 1.75rem;
+  font-size: 1.50rem;
   color: #1a237e;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
-/* Error Message */
-.admin-login-message {
+/* Subtitle */
+.admin-signup-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+/* Message (Error/Success) */
+.admin-signup-message {
   color: #dc3545;
   font-weight: 600;
-  text-align: center;
+  margin-bottom: 15px;
   font-size: 0.95rem;
-  background: #ffe6e6;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #dc3545;
+}
+
+/* Form Container */
+.admin-signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Form Group */
-.admin-form-group {
+.form-group {
   margin-bottom: 0;
   text-align: left;
 }
 
 /* Labels */
-.admin-form-group label {
+.form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
@@ -71,7 +78,7 @@
 }
 
 /* Input Fields */
-.admin-form-group input {
+.form-group input {
   width: 100%;
   padding: 14px 18px;
   border: 2px solid #1a237e;
@@ -84,39 +91,19 @@
   color: #1a237e;
 }
 
-.admin-form-group input:focus {
+.form-group input:focus {
   outline: none;
   border-color: #1a73e8;
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
 }
 
-.admin-form-group input::placeholder {
+.form-group input::placeholder {
   color: #9ca3af;
 }
 
-/* Forgot Password Link */
-.admin-forgot-link {
-  text-align: right;
-  font-size: 0.95rem;
-  margin-top: -5px;
-  margin-bottom: 10px;
-}
-
-.admin-forgot-link a {
-  color: #1a73e8;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.admin-forgot-link a:hover {
-  color: #0d1642;
-  text-decoration: underline;
-}
-
-/* Login Button */
-.admin-login-btn {
+/* Button */
+.admin-signup-btn {
   width: 100%;
   padding: 16px;
   background: #1a237e;
@@ -130,129 +117,151 @@
   box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-top: 10px;
 }
 
-.admin-login-btn:hover {
+.admin-signup-btn:hover {
   background: #0d1642;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4);
 }
 
-.admin-login-btn:active {
+.admin-signup-btn:active {
   transform: translateY(0);
 }
 
-/* Loading State */
-.admin-login-btn.loading {
-  background: #ccc;
-  cursor: not-allowed;
+/* Login Link */
+.login-link {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  color: #1a237e;
 }
 
-.admin-login-btn.loading:hover {
-  transform: none;
-  background: #ccc;
-  box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+.login-link a {
+  color: #1a73e8;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.login-link a:hover {
+  color: #0d1642;
+  text-decoration: underline;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .admin-login-page {
+  .admin-signup-page {
     padding: 15px;
   }
 
-  .admin-login-form {
+  .admin-signup-container {
     padding: 35px 30px;
     max-width: 95%;
   }
 
-  .admin-login-title {
-    font-size: 1.5rem;
+  .admin-signup-title {
+    font-size: 1.3rem;
     margin-bottom: 18px;
   }
 
-  .admin-form-group label {
+  .admin-signup-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .form-group label {
     font-size: 0.95rem;
   }
 
-  .admin-form-group input {
+  .form-group input {
     padding: 12px 16px;
     font-size: 0.95rem;
   }
 
-  .admin-login-btn {
+  .admin-signup-btn {
     font-size: 1.05rem;
     padding: 14px;
   }
 
-  .admin-forgot-link {
+  .login-link {
     font-size: 0.9rem;
+    margin-top: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .admin-login-page {
+  .admin-signup-page {
     padding: 10px;
   }
 
-  .admin-login-form {
+  .admin-signup-container {
     padding: 30px 25px;
     border-width: 2px;
-    gap: 18px;
   }
 
-  .admin-login-title {
-    font-size: 1.3rem;
+  .admin-signup-title {
+    font-size: 1.2rem;
     margin-bottom: 15px;
   }
 
-  .admin-form-group label {
+  .admin-signup-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .admin-signup-form {
+    gap: 18px;
+  }
+
+  .form-group label {
     font-size: 0.9rem;
     margin-bottom: 6px;
   }
 
-  .admin-form-group input {
+  .form-group input {
     padding: 11px 14px;
     font-size: 0.9rem;
   }
 
-  .admin-login-btn {
+  .admin-signup-btn {
     font-size: 1rem;
     padding: 13px;
   }
 
-  .admin-forgot-link {
+  .login-link {
     font-size: 0.85rem;
+    margin-top: 15px;
   }
 
-  .admin-login-message {
+  .admin-signup-message {
     font-size: 0.9rem;
   }
 }
 
 @media (max-width: 360px) {
-  .admin-login-form {
+  .admin-signup-container {
     padding: 25px 20px;
   }
 
-  .admin-login-title {
-    font-size: 1.2rem;
+  .admin-signup-title {
+    font-size: 1.1rem;
   }
 
-  .admin-form-group input {
+  .admin-signup-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .form-group input {
     padding: 10px 12px;
     font-size: 0.85rem;
   }
 
-  .admin-login-btn {
+  .admin-signup-btn {
     font-size: 0.95rem;
     padding: 12px;
   }
 
-  .admin-forgot-link {
-    font-size: 0.8rem;
-  }
-
-  .admin-login-message {
+  .admin-signup-message {
     font-size: 0.85rem;
   }
 }

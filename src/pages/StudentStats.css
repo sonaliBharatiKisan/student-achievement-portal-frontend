@@ -1,0 +1,263 @@
+/* frontend/src/pages/StudentStats.css */
+
+.stats-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+  background: linear-gradient(135deg, #e6f2ff 0%, #f0f8ff 100%);;
+  min-height: 100vh;
+}
+
+.stats-header {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stats-header h2 {
+  color: #2d3748;
+  font-size: 1.75rem;
+  margin-bottom: 10px;
+  background: #1a237e;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.student-name {
+  font-size: 1.3em;
+  color: #4a5568;
+  margin: 10px 0;
+  font-weight: 500;
+}
+
+.total-count {
+  font-size: 1rem;
+  color: linear-gradient(135deg, #e6f2ff 0%, #f0f8ff 100%);
+  margin-top: 10px;
+}
+
+.total-count strong {
+  color: linear-gradient(135deg, #e6f2ff 0%, #f0f8ff 100%);
+  font-size: 1rem;
+}
+
+.charts-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 5px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card h2 {
+  color: #1a237e;
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+}
+
+.chart-subtitle {
+  color: gray;
+  font-style: italic;
+  margin-top: 40px;
+  margin-bottom: 2px;
+}
+
+.legend-stats {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: #f7fafc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+  background: #edf2f7;
+  transform: translateX(5px);
+}
+
+.legend-item.selected {
+  background: #e6fffa;
+  border: 2px solid #38b2ac;
+  transform: scale(1.05);
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  color: #2d3748;
+  font-size: 0.95em;
+}
+
+.back-btn {
+  margin-top: 25px;
+  margin-left:30px;
+  padding: 12px 30px;
+  background: #38b2ac;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  background: #1a237e;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.stats-summary {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stats-summary h3 {
+  color: #1a237e;
+  font-size: 1.40rem;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.summary-card h4 {
+  color: #4a5568;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+
+.summary-count {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #2d3748;
+  margin: 10px 0;
+}
+
+.summary-percentage {
+  color: #718096;
+  font-size: 1em;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 100px 20px;
+  font-size: 1.5em;
+  color: white;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.no-data {
+  background: white;
+  border-radius: 15px;
+  padding: 60px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.no-data h2 {
+  color: #2d3748;
+  font-size: 2em;
+  margin-bottom: 15px;
+}
+
+.no-data p {
+  color: #718096;
+  font-size: 1.2em;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-container {
+    padding: 15px;
+  }
+
+  .stats-header h1 {
+    font-size: 1.8em;
+  }
+
+  .student-name {
+    font-size: 1.1em;
+  }
+
+  .chart-card {
+    padding: 20px;
+  }
+
+  .chart-card h2 {
+    font-size: 1.4em;
+  }
+
+  .legend-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-count {
+    font-size: 2em;
+  }
+}'

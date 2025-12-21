@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+// frontend/pages/Dashboard.js
+import React, { useEffect, useState, useRef } from "react";
 import "./Dashboard.css";
 
 const images = [
-   "/images/achieve.png",
+  "/images/achieve.png",
   "/images/campus4.jpg",
   "/images/chess.png",
   "/images/cricket1.jpg",
@@ -18,7 +19,6 @@ const images = [
   "/images/sport1.jpeg",
   "/images/sport2.jpeg",
   "/images/uniform.png",
- 
 ];
 
 const animations = ["fade", "zoom-in", "zoom-out", "slide-left", "slide-right"];
@@ -26,34 +26,64 @@ const animations = ["fade", "zoom-in", "zoom-out", "slide-left", "slide-right"];
 const Dashboard = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentAnim, setCurrentAnim] = useState("fade");
+  const [isPaused, setIsPaused] = useState(false);
+
+  const intervalRef = useRef(null);
+
+  const startSlider = () => {
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+      setCurrentAnim(
+        animations[Math.floor(Math.random() * animations.length)]
+      );
+    }, 3000);
+  };
+
+  const stopSlider = () => clearInterval(intervalRef.current);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
+    if (!isPaused) startSlider();
+    else stopSlider();
+    return () => stopSlider();
+  }, [isPaused]);
 
-      // pick random animation
-      const randomAnim = animations[Math.floor(Math.random() * animations.length)];
-      setCurrentAnim(randomAnim);
-    }, 3000); // 3 seconds per image
+  const nextImage = () => {
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentAnim(
+      animations[Math.floor(Math.random() * animations.length)]
+    );
+  };
 
-    return () => clearInterval(interval);
-  }, []);
+  const prevImage = () => {
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentAnim(
+      animations[Math.floor(Math.random() * animations.length)]
+    );
+  };
 
   return (
     <div
       className={`dashboard-container ${currentAnim}`}
       style={{ backgroundImage: `url(${images[currentIndex]})` }}
     >
-      {/* Dark Overlay */}
       <div className="image-overlay"></div>
 
-      {/* Dashboard content */}
       <div className="dashboard-content">
         <h1>Welcome to Student Achievement Portal</h1>
         <p>Track your achievements and academic progress here.</p>
       </div>
+
+      {/* LEFT - PREVIOUS */}
+      <button className="side-btn left-btn" onClick={prevImage}></button>
+
+      {/* CENTER - PLAY / PAUSE */}
+      <button
+        className={`play-pause-btn ${isPaused ? "" : "playing"}`}
+        onClick={() => setIsPaused(!isPaused)}
+      ></button>
+
+      {/* RIGHT - NEXT */}
+      <button className="side-btn right-btn" onClick={nextImage}></button>
     </div>
   );
 };

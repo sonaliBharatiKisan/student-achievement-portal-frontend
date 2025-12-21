@@ -16,7 +16,7 @@ const DebugTestComponent = () => {
       minHeight: '100vh'
     }}>
       <h1 style={{ color: '#333', marginBottom: '30px' }}>
-         Debug Test Component
+        🧪 Debug Test Component
       </h1>
 
       <div style={{
@@ -79,7 +79,7 @@ const DebugTestComponent = () => {
           animation: 'slideIn 0.3s ease-out'
         }}>
           <h2 style={{ color: '#2e7d32', marginTop: 0 }}>
-            Full Report Buttons (Test)
+            🚀 Full Report Buttons (Test)
           </h2>
           <p style={{ color: '#666', marginBottom: '15px' }}>
             These buttons should appear when a category is selected
@@ -95,7 +95,7 @@ const DebugTestComponent = () => {
               fontSize: '16px',
               fontWeight: 'bold'
             }}>
-               Full Report (CSV)
+              📦 Full Report (CSV)
             </button>
             <button style={{
               padding: '12px 24px',
@@ -107,7 +107,7 @@ const DebugTestComponent = () => {
               fontSize: '16px',
               fontWeight: 'bold'
             }}>
-               Full Report (PDF)
+              📄 Full Report (PDF)
             </button>
             <button style={{
               padding: '12px 24px',
@@ -119,7 +119,7 @@ const DebugTestComponent = () => {
               fontSize: '16px',
               fontWeight: 'bold'
             }}>
-               Full Report (Word)
+              📝 Full Report (Word)
             </button>
           </div>
         </div>

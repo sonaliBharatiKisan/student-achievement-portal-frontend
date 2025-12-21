@@ -130,6 +130,7 @@ const AdminReportGenerator = () => {
         setAcademicFields(res.data.academic);
       } catch (err) {
         console.error("Error fetching fields:", err);
+        alert("Failed to load field options. Please refresh the page.");
       }
     };
     fetchFields();
@@ -204,10 +205,10 @@ const AdminReportGenerator = () => {
         } : {}
       };
 
-      console.log("Sending request:", requestData);
+      console.log("📤 Sending request:", requestData);
 
       const res = await axios.post(`${API_BASE_URL}/admin/report`, requestData);
-      console.log(" Received response:", res.data);
+      console.log("📥 Received response:", res.data);
       
       if (!res.data || res.data.length === 0) {
         alert("No data found matching the selected filters. Try adjusting your filters.");
@@ -290,7 +291,7 @@ const AdminReportGenerator = () => {
       body: rows,
       startY: 20,
       styles: { fontSize: 7 },
-      headStyles: { fillColor: [138, 43, 226] },
+      headStyles: { fillColor: [26, 35, 126] },
     });
 
     doc.save(`admin_report_${new Date().toISOString().split("T")[0]}.pdf`);
@@ -350,7 +351,6 @@ const AdminReportGenerator = () => {
     saveAs(blob, `admin_report_${new Date().toISOString().split("T")[0]}.docx`);
   };
 
-  // NEW: Export All as Combined PDF
   const exportAllAsPDF = () => {
     if (!reportData.length) return alert("No data to export!");
     
@@ -367,7 +367,6 @@ const AdminReportGenerator = () => {
 
     const doc = new jsPDF({ orientation: "landscape" });
     
-    // Title Page
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
     doc.text("Complete Report", 14, 20);
@@ -380,10 +379,12 @@ const AdminReportGenerator = () => {
     if (selectedAchievementSubType) {
       doc.text(`Sub-Type: ${selectedAchievementSubType}`, 14, 38);
     }
-    doc.text(`Total Records: ${reportData.length}`, 14, 46);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 54);
+    if (dateRange.start && dateRange.end) {
+      doc.text(`Date Range: ${dateRange.start} - ${dateRange.end}`, 14, 46);
+    }
+    doc.text(`Total Records: ${reportData.length}`, 14, 54);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 62);
     
-    // Add data table
     doc.addPage();
     
     const headers = allFields.map((f) => FIELD_LABELS[f] || f);
@@ -405,7 +406,7 @@ const AdminReportGenerator = () => {
       body: rows,
       startY: 22,
       styles: { fontSize: 7 },
-      headStyles: { fillColor: [138, 43, 226] },
+      headStyles: { fillColor: [26, 35, 126] },
       margin: { top: 22 }
     });
 
@@ -466,43 +467,15 @@ const AdminReportGenerator = () => {
     return (
       <>
         {showExportAllButton && (
-          <div style={{
-            backgroundColor: '#e8f5e9',
-            padding: '15px 20px',
-            borderRadius: '8px',
-            marginBottom: '15px',
-            border: '2px solid #4CAF50',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '20px'
-          }}>
-            <div>
-              <h4 style={{ margin: 0, color: '#2e7d32', fontSize: '16px' }}>
-                 Export Complete Report
-              </h4>
-              <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#666' }}>
+          <div className="export-all-container">
+            <div className="export-all-info">
+              <h4 className="export-all-title">📦 Export Complete Report</h4>
+              <p className="export-all-subtitle">
                 Export all {reportData.length} records as a single comprehensive PDF
               </p>
             </div>
-            <button 
-              onClick={exportAllAsPDF} 
-              style={{
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                padding: '12px 30px',
-                borderRadius: '5px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                transition: 'all 0.3s'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
-            >
-               Export All as PDF
+            <button onClick={exportAllAsPDF} className="export-all-btn">
+              📄 Export All as PDF
             </button>
           </div>
         )}
@@ -553,20 +526,24 @@ const AdminReportGenerator = () => {
 
   const filtersEnabled = areFiltersEnabled();
   const locationLabel = getLocationFieldLabel();
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="report-generator">
-      <h1> Admin Report Generator</h1>
+      <h1 className="report-main-title">📊 Admin Report Generator</h1>
 
       <fieldset className="date-filter">
-        <legend> Date Range Filter (Optional)</legend>
+        <legend>📅 Calendar Year Filter (Optional)</legend>
+        <p className="filter-description">
+          Filter achievements by the year they occurred (e.g., 2020-2024). Leave empty to show all years.
+        </p>
         <div className="date-inputs">
           <label>
             Start Year:
             <input
               type="number"
-              min="2020"
-              max={new Date().getFullYear()}
+              min="2000"
+              max={currentYear}
               value={dateRange.start}
               onChange={(e) => setDateRange((prev) => ({ ...prev, start: e.target.value }))}
               placeholder="e.g., 2020"
@@ -576,18 +553,18 @@ const AdminReportGenerator = () => {
             End Year:
             <input
               type="number"
-              min="2020"
-              max={new Date().getFullYear()}
+              min="2000"
+              max={currentYear}
               value={dateRange.end}
               onChange={(e) => setDateRange((prev) => ({ ...prev, end: e.target.value }))}
-              placeholder="e.g., 2024"
+              placeholder={`e.g., ${currentYear}`}
             />
           </label>
         </div>
       </fieldset>
 
       <fieldset className="achievement-filter">
-        <legend> Achievement Filters</legend>
+        <legend>🏆 Achievement Filters</legend>
         
         <div className="achievement-type-selector">
           <label>Select Achievement Category:</label>
@@ -636,7 +613,7 @@ const AdminReportGenerator = () => {
                 value={selectedAchievementSubType}
                 onChange={(e) => setSelectedAchievementSubType(e.target.value)}
               />
-              <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+              <small className="helper-text">
                 Leave empty to get all sub-categories under {selectedAchievementCategory}
               </small>
             </div>
@@ -686,13 +663,7 @@ const AdminReportGenerator = () => {
               </>
             ) : (
               selectedAchievementCategory && selectedAchievementCategory !== "" && (
-                <div style={{ 
-                  padding: '10px', 
-                  backgroundColor: '#e3f2fd', 
-                  borderRadius: '5px', 
-                  marginTop: '10px',
-                  color: '#1976d2'
-                }}>
+                <div className="info-message">
                   ℹ️ Location, Level, and Position filters are not applicable for {selectedAchievementCategory}
                 </div>
               )
@@ -702,7 +673,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend> Student Fields ({selectedStudentFields.length})</legend>
+        <legend>👩‍🎓 Student Fields ({selectedStudentFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => setSelectedStudentFields([...studentFields])}>Select All</button>
           <button onClick={() => setSelectedStudentFields([])}>Clear All</button>
@@ -711,7 +682,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend>Academic Fields ({selectedAcademicFields.length})</legend>
+        <legend>📘 Academic Fields ({selectedAcademicFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => setSelectedAcademicFields([...academicFields])}>Select All</button>
           <button onClick={() => setSelectedAcademicFields([])}>Clear All</button>
@@ -720,7 +691,7 @@ const AdminReportGenerator = () => {
       </fieldset>
 
       <fieldset>
-        <legend> Achievement Fields ({selectedAchievementFields.length})</legend>
+        <legend>🏅 Achievement Fields ({selectedAchievementFields.length})</legend>
         <div className="field-actions">
           <button onClick={() => {
             const filtersEnabled = areFiltersEnabled();

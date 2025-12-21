@@ -1,176 +1,175 @@
-// frontend/src/components/AdminSignup.js
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import "./AdminSignup.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function AdminSignup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: "", otp: "", password: "" });
-  const [message, setMessage] = useState(""); // Show messages
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const sendOtp = async () => {
+    if (!form.email) {
+      setMessage("Please enter your email address");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
     try {
       const res = await axios.post(`${API_BASE_URL}/admin/send-otp`, {
         email: form.email,
       });
-      setMessage(res.data.message);
+      setMessage(res.data.message || "OTP sent successfully!");
       setStep(2);
     } catch (err) {
-      setMessage(err.response?.data?.error || "Failed to send OTP");
+      console.error("Send OTP error:", err);
+      setMessage(err.response?.data?.error || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const verifyOtp = async () => {
+    if (!form.otp || !form.password) {
+      setMessage("Please enter both OTP and password");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setMessage("Password must be at least 6 characters long");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
     try {
       const res = await axios.post(`${API_BASE_URL}/admin/verify-otp`, form);
-      if (res.data.message === "Admin created successfully") {
-        alert("Signup successful! Redirecting to login...");
+      if (res.data.success) {
+        alert("✅ Signup successful! Redirecting to login...");
         navigate("/admin/login");
       } else {
-        setMessage(res.data.message || "OTP verification failed");
+        setMessage(res.data.error || "OTP verification failed");
       }
     } catch (err) {
-      setMessage(err.response?.data?.error || "OTP verification failed");
+      console.error("Verify OTP error:", err);
+      setMessage(err.response?.data?.error || "OTP verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      if (step === 1) {
+        sendOtp();
+      } else if (step === 2) {
+        verifyOtp();
+      }
     }
   };
 
   return (
-    <div
-      style={{
-        backgroundImage: "url('/cummins.png')",
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        minHeight: "100vh",
-        width: "100vw",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 400,
-          width: "100%",
-          padding: "30px",
-          background: "rgba(255,255,255,0.9)",
-          borderRadius: "12px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px", color: "#003366" }}>Admin Signup</h2>
+    <div className="admin-signup-page">
+      <div className="admin-signup-container">
+        <h2 className="admin-signup-title">Main Admin Signup</h2>
+        <p className="admin-signup-subtitle">
+          Only sonalibharti430@gmail.com can signup
+        </p>
 
         {message && (
-          <p style={{ color: "red", fontWeight: "bold" }}>{message}</p>
+          <p className={`admin-signup-message ${message.includes("success") ? "success" : "error"}`}>
+            {message}
+          </p>
         )}
 
         {step === 1 && (
-          <div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
+          <div className="admin-signup-form">
+            <div className="form-group">
               <label>Email</label>
               <input
+                type="email"
                 name="email"
                 placeholder="Enter your Email"
                 value={form.email}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                disabled={loading}
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
             </div>
-            <button
-              onClick={sendOtp}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "linear-gradient(to right, #28a745, #218838)",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
+            <button 
+              onClick={sendOtp} 
+              className="admin-signup-btn"
+              disabled={loading}
             >
-              Send OTP
+              {loading ? "Sending..." : "Send OTP"}
             </button>
           </div>
         )}
 
         {step === 2 && (
-          <div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
+          <div className="admin-signup-form">
+            <div className="form-group">
               <label>OTP</label>
               <input
+                type="text"
                 name="otp"
-                placeholder="Enter OTP"
+                placeholder="Enter 6-digit OTP"
                 value={form.otp}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                disabled={loading}
+                maxLength="6"
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
             </div>
-            <div style={{ marginBottom: "15px", textAlign: "left" }}>
+            <div className="form-group">
               <label>Password</label>
               <input
                 type="password"
                 name="password"
-                placeholder="Create Password"
+                placeholder="Create Password (min 6 characters)"
                 value={form.password}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                disabled={loading}
                 required
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginTop: "5px",
-                }}
               />
             </div>
-            <button
-              onClick={verifyOtp}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "linear-gradient(to right, #26b848, #218838)",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
+            <button 
+              onClick={verifyOtp} 
+              className="admin-signup-btn"
+              disabled={loading}
             >
-              Verify & Signup
+              {loading ? "Verifying..." : "Verify & Signup"}
+            </button>
+            <button 
+              onClick={() => {
+                setStep(1);
+                setForm({ ...form, otp: "", password: "" });
+                setMessage("");
+              }} 
+              className="admin-signup-back-btn"
+              disabled={loading}
+            >
+              Back to Email
             </button>
           </div>
         )}
 
-        <p style={{ marginTop: "15px" }}>
+        <p className="login-link">
           Already have an account?{" "}
-          <Link to="/admin/login" style={{ color: "#003366", fontWeight: "bold" }}>
-            Login here
-          </Link>
+          <Link to="/admin/login">Login here</Link>
         </p>
       </div>
     </div>

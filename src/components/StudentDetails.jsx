@@ -40,9 +40,9 @@ const StudentDetails = () => {
       let bVal = b[field] || "";
       
       if (direction === "asc") {
-        return aVal.localeCompare(bVal, undefined, { numeric: true });
+        return aVal.toString().localeCompare(bVal.toString(), undefined, { numeric: true });
       } else {
-        return bVal.localeCompare(aVal, undefined, { numeric: true });
+        return bVal.toString().localeCompare(aVal.toString(), undefined, { numeric: true });
       }
     });
     
@@ -79,7 +79,7 @@ const StudentDetails = () => {
             />
           </div>
           <button onClick={fetchStudents} className="refresh-btn">
-            Refresh Data
+            🔄 Refresh Data
           </button>
         </div>
       </div>
@@ -136,16 +136,16 @@ const StudentDetails = () => {
             <tbody>
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((student, index) => (
-                  <tr key={index}>
+                  <tr key={student._id || student.USN || index}>
                     <td className="usn-cell">{student.USN || "-"}</td>
                     <td className="name-cell">{student.Name || "-"}</td>
-                    <td>{student.DOB || "-"}</td>
-                    <td>{student.Gender || "-"}</td>
+                    <td className="dob-cell">{student.DOB || "-"}</td>
+                    <td className="gender-cell">{student.Gender || "-"}</td>
                     <td className="email-cell">{student.Email || "-"}</td>
-                    <td>{student.Phone || "-"}</td>
-                    <td>{student.Department || "-"}</td>
-                    <td>{student.Year || "-"}</td>
-                    <td>{student.Semester || "-"}</td>
+                    <td className="phone-cell">{student.Phone || "-"}</td>
+                    <td className="dept-cell">{student.Department || "-"}</td>
+                    <td className="year-cell">{student.Year || "-"}</td>
+                    <td className="semester-cell">{student.Semester || "-"}</td>
                   </tr>
                 ))
               ) : (

@@ -11,7 +11,7 @@ const TestExportAll = () => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>Test Export All Feature</h1>
+      <h1> Test Export All Feature</h1>
       
       {/* Category Selection */}
       <div style={{ marginBottom: '30px' }}>
@@ -85,7 +85,7 @@ const TestExportAll = () => {
                 opacity: exportingAll ? 0.6 : 1
               }}
             >
-              {exportingAll ? " Exporting..." : " Export All as CSV (ZIP)"}
+              {exportingAll ? "⏳ Exporting..." : "📦 Export All as CSV (ZIP)"}
             </button>
             <button 
               onClick={() => handleExportClick("pdf")} 
@@ -102,7 +102,7 @@ const TestExportAll = () => {
                 opacity: exportingAll ? 0.6 : 1
               }}
             >
-              {exportingAll ? " Exporting..." : " Export All as Combined PDF"}
+              {exportingAll ? "⏳ Exporting..." : "📄 Export All as Combined PDF"}
             </button>
             <button 
               onClick={() => handleExportClick("word")} 
@@ -119,7 +119,7 @@ const TestExportAll = () => {
                 opacity: exportingAll ? 0.6 : 1
               }}
             >
-              {exportingAll ? " Exporting..." : " Export All as Combined Word"}
+              {exportingAll ? "⏳ Exporting..." : "📝 Export All as Combined Word"}
             </button>
           </div>
           <p style={{ fontSize: '12px', color: '#999', marginTop: '10px' }}>
@@ -137,7 +137,7 @@ const TestExportAll = () => {
           border: '1px solid #ffc107',
           color: '#856404'
         }}>
-           Please select an Achievement Category above to see the Export All options
+          Please select an Achievement Category above to see the Export All options
         </div>
       )}
 
@@ -155,7 +155,7 @@ const TestExportAll = () => {
           <li>The "Export All Reports" section should appear with 3 colored buttons</li>
           <li>If this works, the same code should work in your AdminReportGenerator</li>
         </ol>
-        <h3 style={{ marginTop: '20px' }}> If Export All section doesn't appear in AdminReportGenerator:</h3>
+        <h3 style={{ marginTop: '20px' }}>🔧 If Export All section doesn't appear in AdminReportGenerator:</h3>
         <ul>
           <li>Make sure you've replaced the entire file content</li>
           <li>Check browser console (F12) for any JavaScript errors</li>

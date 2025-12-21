@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./Leaderboard.css";
 
 // ✅ Add API base URL from environment variable
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
@@ -10,10 +11,13 @@ function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const [celebratingBadge, setCelebratingBadge] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
+        // ✅ Use environment variable for API endpoints
         const [leaderboardRes, achievementRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/leaderboard`),
           axios.get(`${API_BASE_URL}/api/achievement-of-the-day`)
@@ -23,6 +27,7 @@ function Leaderboard() {
         setAchievementOfTheDay(achievementRes.data.data || []);
         setError(null);
       } catch (error) {
+        console.error("Error fetching leaderboard data:", error);
         setError("Failed to load data.");
         setLeaderboard([]);
         setAchievementOfTheDay([]);
@@ -41,350 +46,48 @@ function Leaderboard() {
     setSelectedAchievement(null);
   };
 
-  const styles = {
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '2rem',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    },
-    header: {
-      textAlign: 'center',
-      marginBottom: '2rem'
-    },
-    title: {
-      fontSize: '2.5rem',
-      fontWeight: '800',
-      color: '#1e293b',
-      margin: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '1rem'
-    },
-    trophy: {
-      fontSize: '3rem'
-    },
-    achievementOfDaySection: {
-      marginBottom: '2rem',
-      background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-      borderRadius: '12px',
-      padding: '1rem',
-      border: '2px solid #fbbf24',
-      boxShadow: '0 8px 20px rgba(251, 191, 36, 0.2)'
-    },
-    achievementTitle: {
-      fontSize: '1.3rem',
-      fontWeight: '700',
-      color: '#92400e',
-      marginBottom: '0.75rem',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem'
-    },
-    aodTableWrapper: {
-      overflowX: 'auto',
-      background: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-    },
-    aodTable: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      fontSize: '0.85rem'
-    },
-    aodThead: {
-      background: '#f59e0b',
-      color: 'white'
-    },
-    aodTh: {
-      padding: '0.6rem',
-      textAlign: 'center',
-      fontWeight: '700',
-      fontSize: '0.8rem',
-      textTransform: 'uppercase'
-    },
-    aodTr: {
-      borderBottom: '1px solid #fef3c7'
-    },
-    aodTd: {
-      padding: '0.6rem',
-      textAlign: 'center',
-      fontSize: '0.85rem'
-    },
-    aodNameCell: {
-      textAlign: 'left',
-      fontWeight: '600',
-      color: '#1e293b'
-    },
-    levelBadge: {
-      display: 'inline-block',
-      padding: '0.25rem 0.6rem',
-      borderRadius: '12px',
-      fontSize: '0.75rem',
-      fontWeight: '700'
-    },
-    positionBadge: {
-      display: 'inline-block',
-      padding: '0.25rem 0.6rem',
-      borderRadius: '12px',
-      fontSize: '0.75rem',
-      fontWeight: '700'
-    },
-    detailsBtn: {
-      padding: '0.4rem 0.8rem',
-      background: '#3b82f6',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '0.75rem',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s'
-    },
-    modalOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    },
-    modalContent: {
-      background: 'white',
-      borderRadius: '12px',
-      padding: '2rem',
-      maxWidth: '600px',
-      width: '90%',
-      maxHeight: '80vh',
-      overflowY: 'auto',
-      position: 'relative',
-      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)'
-    },
-    modalHeader: {
-      fontSize: '1.5rem',
-      fontWeight: '700',
-      color: '#1e293b',
-      marginBottom: '1.5rem',
-      paddingBottom: '0.75rem',
-      borderBottom: '2px solid #e5e7eb'
-    },
-    modalRow: {
-      marginBottom: '1rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.25rem'
-    },
-    modalLabel: {
-      fontSize: '0.85rem',
-      fontWeight: '600',
-      color: '#64748b',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px'
-    },
-    modalValue: {
-      fontSize: '1rem',
-      color: '#1e293b',
-      fontWeight: '500'
-    },
-    closeBtn: {
-      position: 'absolute',
-      top: '1rem',
-      right: '1rem',
-      background: '#ef4444',
-      color: 'white',
-      border: 'none',
-      borderRadius: '50%',
-      width: '32px',
-      height: '32px',
-      fontSize: '1.2rem',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontWeight: '700',
-      transition: 'all 0.2s'
-    },
-    loadingContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '400px',
-      gap: '1rem'
-    },
-    spinner: {
-      width: '60px',
-      height: '60px',
-      border: '5px solid #e5e7eb',
-      borderTop: '5px solid #3b82f6',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    },
-    errorContainer: {
-      textAlign: 'center',
-      padding: '3rem',
-      background: '#fee2e2',
-      borderRadius: '12px',
-      border: '2px solid #ef4444'
-    },
-    errorText: {
-      color: '#dc2626',
-      fontSize: '1.125rem',
-      fontWeight: '600',
-      margin: 0
-    },
-    noData: {
-      textAlign: 'center',
-      padding: '4rem 2rem',
-      background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
-      borderRadius: '16px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-    },
-    tableWrapper: {
-      overflowX: 'auto',
-      background: 'white',
-      borderRadius: '16px',
-      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e5e7eb'
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      background: 'white'
-    },
-    thead: {
-      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-      color: 'white'
-    },
-    th: {
-      padding: '1.25rem 1rem',
-      textAlign: 'center',
-      fontSize: '0.95rem',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      borderBottom: '3px solid #2563eb'
-    },
-    tr: {
-      transition: 'all 0.3s ease',
-      borderBottom: '1px solid #e5e7eb'
-    },
-    td: {
-      padding: '1.25rem 1rem',
-      textAlign: 'center',
-      fontSize: '1rem'
-    },
-    rankCell: {
-      fontWeight: '800',
-      fontSize: '1.5rem'
-    },
-    nameCell: {
-      textAlign: 'left',
-      fontWeight: '600',
-      color: '#1e293b',
-      fontSize: '1.1rem'
-    },
-    uceCell: {
-      color: '#64748b',
-      fontSize: '0.9rem',
-      fontFamily: "'Courier New', monospace"
-    },
-    pointsValue: {
-      display: 'inline-block',
-      padding: '0.5rem 1rem',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-      color: 'white',
-      borderRadius: '20px',
-      fontSize: '1.25rem',
-      fontWeight: '700',
-      boxShadow: '0 4px 6px rgba(37, 99, 235, 0.3)'
-    },
-    achievementsCell: {
-      color: '#64748b',
-      fontWeight: '600',
-      fontSize: '1.1rem'
-    },
-    badge: {
-      display: 'inline-block',
-      padding: '0.6rem 1.2rem',
-      borderRadius: '25px',
-      fontWeight: '700',
-      fontSize: '0.95rem',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
-      color: 'white'
-    }
+  const handleBadgeClick = (badge) => {
+    setCelebratingBadge(badge);
+    setTimeout(() => setCelebratingBadge(null), 2000);
   };
 
-  const getLevelBadgeStyle = (level) => {
-    if (level?.includes('International')) {
-      return { ...styles.levelBadge, background: '#dc2626', color: 'white' };
-    } else if (level?.includes('National')) {
-      return { ...styles.levelBadge, background: '#ea580c', color: 'white' };
-    } else if (level?.includes('State')) {
-      return { ...styles.levelBadge, background: '#2563eb', color: 'white' };
-    } else if (level?.includes('Inter-College')) {
-      return { ...styles.levelBadge, background: '#7c3aed', color: 'white' };
-    } else if (level?.includes('Intra-College')) {
-      return { ...styles.levelBadge, background: '#059669', color: 'white' };
-    }
-    return { ...styles.levelBadge, background: '#6b7280', color: 'white' };
+  const getLevelClass = (level) => {
+    if (level?.includes('International')) return 'level-international';
+    if (level?.includes('National')) return 'level-national';
+    if (level?.includes('State')) return 'level-state';
+    if (level?.includes('Inter-College')) return 'level-inter-college';
+    if (level?.includes('Intra-College')) return 'level-intra-college';
+    return 'level-default';
   };
 
-  const getPositionBadgeStyle = (position) => {
-    if (position === 'Winner') {
-      return { ...styles.positionBadge, background: '#fbbf24', color: '#78350f' };
-    } else if (position === 'Runner-up') {
-      return { ...styles.positionBadge, background: '#d1d5db', color: '#1f2937' };
-    } else if (position === 'Participation') {
-      return { ...styles.positionBadge, background: '#fb923c', color: 'white' };
-    }
-    return { ...styles.positionBadge, background: '#6b7280', color: 'white' };
+  const getPositionClass = (position) => {
+    if (position === 'Winner') return 'position-winner';
+    if (position === 'Runner-up') return 'position-runner-up';
+    if (position === 'Participation') return 'position-participation';
+    return 'position-default';
   };
 
-  const getBadgeStyle = (badge) => {
-    if (badge?.includes('Platinum')) {
-      return { ...styles.badge, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)' };
-    } else if (badge?.includes('Gold')) {
-      return { ...styles.badge, background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', color: '#78350f' };
-    } else if (badge?.includes('Silver')) {
-      return { ...styles.badge, background: 'linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%)', color: '#1f2937' };
-    } else if (badge?.includes('Bronze')) {
-      return { ...styles.badge, background: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)' };
-    }
-    return styles.badge;
+  const getBadgeClass = (badge) => {
+    if (badge?.includes('Platinum')) return 'badge-platinum';
+    if (badge?.includes('Gold')) return 'badge-gold';
+    if (badge?.includes('Silver')) return 'badge-silver';
+    if (badge?.includes('Bronze')) return 'badge-bronze';
+    return 'badge-default';
   };
 
-  const getRowStyle = (rank) => {
-    if (rank === 1) {
-      return { ...styles.tr, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' };
-    } else if (rank === 2) {
-      return { ...styles.tr, background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)' };
-    } else if (rank === 3) {
-      return { ...styles.tr, background: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)' };
-    }
-    return styles.tr;
-  };
-
-  const getRankColor = (rank) => {
-    if (rank === 1) return '#d97706';
-    if (rank === 2) return '#6b7280';
-    if (rank === 3) return '#c2410c';
-    return '#1e293b';
+  const getRowClass = (rank) => {
+    if (rank === 1) return 'rank-1';
+    if (rank === 2) return 'rank-2';
+    if (rank === 3) return 'rank-3';
+    return '';
   };
 
   if (loading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loadingContainer}>
-          <div style={styles.spinner}></div>
-          <p style={{ fontSize: '1.125rem', color: '#64748b' }}>Loading leaderboard...</p>
+      <div className="leaderboard-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p className="loading-text">Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -392,56 +95,71 @@ function Leaderboard() {
 
   if (error) {
     return (
-      <div style={styles.container}>
-        <div style={styles.errorContainer}>
-          <p style={styles.errorText}>{error}</p>
+      <div className="leaderboard-container">
+        <div className="error-container">
+          <p className="error-text">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
+    <div className="leaderboard-container">
+      {/* Celebration Animation */}
+      {celebratingBadge && (
+        <div className="celebration-overlay">
+          <div className="celebration-emojis">
+            {[...Array(30)].map((_, i) => (
+              <span key={i} className={`celebration-emoji celebration-emoji-${i % 5}`}>
+                {celebratingBadge.includes('Platinum') ? '💎' :
+                 celebratingBadge.includes('Gold') ? '🥇' :
+                 celebratingBadge.includes('Silver') ? '🥈' :
+                 celebratingBadge.includes('Bronze') ? '🥉' : '👏'}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Achievement of the Day Section */}
       {achievementOfTheDay.length > 0 && (
-        <div style={styles.achievementOfDaySection}>
-          <h3 style={styles.achievementTitle}>
-            🏆 Achievement of the Day
+        <div className="achievement-of-day-section">
+          <h3 className="aod-title">
+            <span className="aod-icon">⭐</span>
+            Achievement of the Day
           </h3>
-          <div style={styles.aodTableWrapper}>
-            <table style={styles.aodTable}>
-              <thead style={styles.aodThead}>
+          <div className="aod-table-wrapper">
+            <table className="aod-table">
+              <thead>
                 <tr>
-                  <th style={{ ...styles.aodTh, textAlign: 'left' }}>Name</th>
-                  <th style={styles.aodTh}>Level</th>
-                  <th style={styles.aodTh}>Position</th>
-                  <th style={styles.aodTh}>Details</th>
+                  <th className="aod-th aod-th-name">Name</th>
+                  <th className="aod-th">Level</th>
+                  <th className="aod-th">Position</th>
+                  <th className="aod-th">Details</th>
                 </tr>
               </thead>
               <tbody>
                 {achievementOfTheDay.map((achievement, index) => (
-                  <tr key={index} style={styles.aodTr}>
-                    <td style={{ ...styles.aodTd, ...styles.aodNameCell }}>
+                  <tr key={index} className="aod-tr">
+                    <td className="aod-td aod-name-cell">
                       {achievement.studentName}
                     </td>
-                    <td style={styles.aodTd}>
-                      <span style={getLevelBadgeStyle(achievement.level)}>
+                    <td className="aod-td">
+                      <span className={`level-badge ${getLevelClass(achievement.level)}`}>
                         {achievement.level}
                       </span>
                     </td>
-                    <td style={styles.aodTd}>
+                    <td className="aod-td">
                       {achievement.position && (
-                        <span style={getPositionBadgeStyle(achievement.position)}>
+                        <span className={`position-badge ${getPositionClass(achievement.position)}`}>
                           {achievement.position}
                         </span>
                       )}
                     </td>
-                    <td style={styles.aodTd}>
+                    <td className="aod-td">
                       <button 
-                        style={styles.detailsBtn}
+                        className="details-btn"
                         onClick={() => handleDetailsClick(achievement)}
-                        onMouseOver={(e) => e.target.style.background = '#2563eb'}
-                        onMouseOut={(e) => e.target.style.background = '#3b82f6'}
                       >
                         Details
                       </button>
@@ -456,79 +174,72 @@ function Leaderboard() {
 
       {/* Modal for Achievement Details */}
       {selectedAchievement && (
-        <div style={styles.modalOverlay} onClick={handleCloseModal}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button 
-              style={styles.closeBtn}
-              onClick={handleCloseModal}
-              onMouseOver={(e) => e.target.style.background = '#dc2626'}
-              onMouseOut={(e) => e.target.style.background = '#ef4444'}
-            >
-              ×
-            </button>
-            <h3 style={styles.modalHeader}>Achievement Details</h3>
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={handleCloseModal}>×</button>
+            <h3 className="modal-header">Achievement Details</h3>
             
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>Student Name</span>
-              <span style={styles.modalValue}>{selectedAchievement.studentName}</span>
+            <div className="modal-row">
+              <span className="modal-label">Student Name</span>
+              <span className="modal-value">{selectedAchievement.studentName}</span>
             </div>
 
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>UCE Number</span>
-              <span style={styles.modalValue}>{selectedAchievement.uce}</span>
+            <div className="modal-row">
+              <span className="modal-label">UCE Number</span>
+              <span className="modal-value">{selectedAchievement.uce}</span>
             </div>
 
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>Type</span>
-              <span style={styles.modalValue}>{selectedAchievement.type}</span>
+            <div className="modal-row">
+              <span className="modal-label">Type</span>
+              <span className="modal-value">{selectedAchievement.type}</span>
             </div>
 
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>Category</span>
-              <span style={styles.modalValue}>{selectedAchievement.category}</span>
+            <div className="modal-row">
+              <span className="modal-label">Category</span>
+              <span className="modal-value">{selectedAchievement.category}</span>
             </div>
 
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>Level</span>
-              <span style={getLevelBadgeStyle(selectedAchievement.level)}>
+            <div className="modal-row">
+              <span className="modal-label">Level</span>
+              <span className={`level-badge ${getLevelClass(selectedAchievement.level)}`}>
                 {selectedAchievement.level}
               </span>
             </div>
 
             {selectedAchievement.position && (
-              <div style={styles.modalRow}>
-                <span style={styles.modalLabel}>Position</span>
-                <span style={getPositionBadgeStyle(selectedAchievement.position)}>
+              <div className="modal-row">
+                <span className="modal-label">Position</span>
+                <span className={`position-badge ${getPositionClass(selectedAchievement.position)}`}>
                   {selectedAchievement.position}
                 </span>
               </div>
             )}
 
-            <div style={styles.modalRow}>
-              <span style={styles.modalLabel}>Event Name</span>
-              <span style={styles.modalValue}>{selectedAchievement.eventName}</span>
+            <div className="modal-row">
+              <span className="modal-label">Event Name</span>
+              <span className="modal-value">{selectedAchievement.eventName}</span>
             </div>
 
             {selectedAchievement.organizerName && (
-              <div style={styles.modalRow}>
-                <span style={styles.modalLabel}>Organizer</span>
-                <span style={styles.modalValue}>{selectedAchievement.organizerName}</span>
+              <div className="modal-row">
+                <span className="modal-label">Organizer</span>
+                <span className="modal-value">{selectedAchievement.organizerName}</span>
               </div>
             )}
 
             {selectedAchievement.eventDate && (
-              <div style={styles.modalRow}>
-                <span style={styles.modalLabel}>Event Date</span>
-                <span style={styles.modalValue}>
+              <div className="modal-row">
+                <span className="modal-label">Event Date</span>
+                <span className="modal-value">
                   {new Date(selectedAchievement.eventDate).toLocaleDateString()}
                 </span>
               </div>
             )}
 
             {selectedAchievement.prize && selectedAchievement.prize !== "0" && (
-              <div style={styles.modalRow}>
-                <span style={styles.modalLabel}>Prize</span>
-                <span style={styles.modalValue}>{selectedAchievement.prize}</span>
+              <div className="modal-row">
+                <span className="modal-label">Prize</span>
+                <span className="modal-value">{selectedAchievement.prize}</span>
               </div>
             )}
           </div>
@@ -536,56 +247,57 @@ function Leaderboard() {
       )}
 
       {/* Leaderboard Section */}
-      <div style={styles.header}>
-        <h2 style={styles.title}>
-          <span style={styles.trophy}>🏆</span>
+      <div className="leaderboard-header">
+        <h2 className="leaderboard-title">
+          <span className="trophy-icon">🏆</span>
           Top 5 Leaderboard
         </h2>
       </div>
       
       {leaderboard.length === 0 ? (
-        <div style={styles.noData}>
-          <p style={{ color: '#6b7280', fontSize: '1.25rem', margin: 0 }}>
-            No achievements recorded yet.
-          </p>
+        <div className="no-data">
+          <p className="no-data-text">No achievements recorded yet.</p>
         </div>
       ) : (
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead style={styles.thead}>
+        <div className="table-wrapper">
+          <table className="leaderboard-table">
+            <thead>
               <tr>
-                <th style={styles.th}>Rank</th>
-                <th style={styles.th}>Name</th>
-                <th style={styles.th}>UCE</th>
-                <th style={styles.th}>Points</th>
-                <th style={styles.th}>Achievements</th>
-                <th style={styles.th}>Badge</th>
+                <th className="lb-th">Rank</th>
+                <th className="lb-th">Name</th>
+                <th className="lb-th">UCE</th>
+                <th className="lb-th">Points</th>
+                <th className="lb-th">Achievements</th>
+                <th className="lb-th">Badge</th>
               </tr>
             </thead>
             <tbody>
               {leaderboard.map((student) => (
                 <tr 
                   key={student.uce || student.email} 
-                  style={getRowStyle(student.rank)}
+                  className={`lb-tr ${getRowClass(student.rank)}`}
                 >
-                  <td style={{ ...styles.td, ...styles.rankCell, color: getRankColor(student.rank) }}>
+                  <td className={`lb-td rank-cell rank-${student.rank}`}>
                     {student.rank}
                   </td>
-                  <td style={{ ...styles.td, ...styles.nameCell }}>
+                  <td className="lb-td name-cell">
                     {student.name}
                   </td>
-                  <td style={{ ...styles.td, ...styles.uceCell }}>
+                  <td className="lb-td uce-cell">
                     {student.uce}
                   </td>
-                  <td style={styles.td}>
-                    <span style={styles.pointsValue}>{student.totalPoints}</span>
+                  <td className="lb-td">
+                    <span className="points-value">{student.totalPoints}</span>
                   </td>
-                  <td style={{ ...styles.td, ...styles.achievementsCell }}>
+                  <td className="lb-td achievements-cell">
                     {student.totalAchievements}
                   </td>
-                  <td style={styles.td}>
+                  <td className="lb-td">
                     {student.badge && (
-                      <span style={getBadgeStyle(student.badge)}>
+                      <span 
+                        className={`badge ${getBadgeClass(student.badge)}`}
+                        onClick={() => handleBadgeClick(student.badge)}
+                      >
                         {student.badge}
                       </span>
                     )}
@@ -597,12 +309,115 @@ function Leaderboard() {
         </div>
       )}
       
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+      {/* Help Button */}
+      <button
+        className="help-button"
+        onClick={() => setShowHelp(true)}
+        title="How are points calculated?"
+      >
+        ?
+      </button>
+
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+          <div className="help-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setShowHelp(false)}>×</button>
+            
+            <h3 className="modal-header">
+              <span className="help-icon">📊</span>
+              How Points are Calculated
+            </h3>
+            
+            <div className="help-intro">
+              <p>
+                Points are awarded based on achievement type, category, and position. 
+                Only <strong>admin-approved</strong> achievements with verification score ≥ 50% count toward the leaderboard.
+              </p>
+            </div>
+
+            <table className="points-table">
+              <thead>
+                <tr>
+                  <th>Achievement Type</th>
+                  <th>Category/Details</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td rowSpan="3"><strong>Co-Curricular</strong></td>
+                  <td>Hackathon/Code Competition (Winner)</td>
+                  <td>15 pts</td>
+                </tr>
+                <tr>
+                  <td>Hackathon/Code Competition (Runner-up)</td>
+                  <td>10 pts</td>
+                </tr>
+                <tr>
+                  <td>Hackathon/Code Competition (Participation)</td>
+                  <td>5 pts</td>
+                </tr>
+                <tr>
+                  <td rowSpan="3"></td>
+                  <td>Project Competition/Paper Presentation (Winner)</td>
+                  <td>10 pts</td>
+                </tr>
+                <tr>
+                  <td>Project Competition/Paper Presentation (Runner-up)</td>
+                  <td>7 pts</td>
+                </tr>
+                <tr>
+                  <td>Project Competition/Paper Presentation (Participation)</td>
+                  <td>5 pts</td>
+                </tr>
+                <tr>
+                  <td rowSpan="2"></td>
+                  <td>Paper Publication (Scopus/Web of Science)</td>
+                  <td>25 pts</td>
+                </tr>
+                <tr>
+                  <td>Paper Publication (Other)</td>
+                  <td>10 pts</td>
+                </tr>
+                <tr>
+                  <td rowSpan="3"><strong>Extra-Curricular</strong></td>
+                  <td>Winner</td>
+                  <td>5 pts</td>
+                </tr>
+                <tr>
+                  <td>Runner-up</td>
+                  <td>3 pts</td>
+                </tr>
+                <tr>
+                  <td>Participation</td>
+                  <td>1 pt</td>
+                </tr>
+                <tr>
+                  <td><strong>Courses</strong></td>
+                  <td>Completed Course</td>
+                  <td>5 pts</td>
+                </tr>
+                <tr>
+                  <td><strong>Special Achievement</strong></td>
+                  <td>Any Special Achievement</td>
+                  <td>20 pts</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div className="badge-requirements">
+              <span className="badge-req-title">Badge Requirements</span>
+              <ul className="badge-req-list">
+                <li><span className="badge-emoji">💎</span> <strong>Platinum:</strong> &gt; 20 points</li>
+                <li><span className="badge-emoji">🥇</span> <strong>Gold:</strong> &gt; 15 points</li>
+                <li><span className="badge-emoji">🥈</span> <strong>Silver:</strong> &gt; 10 points</li>
+                <li><span className="badge-emoji">🥉</span> <strong>Bronze:</strong> &gt; 5 points</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
