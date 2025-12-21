@@ -1,238 +1,134 @@
 import { useState } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import "./Signup.css";
+
+// ✅ API base URL from environment variable (production-ready for Render)
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 function Signup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: "", uce: "", otp: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError("");
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   // Step 1: Send OTP
   const sendOtp = async () => {
-    setError("");
-    setSuccess("");
-    
     // Email domain validation
     const emailPattern = /^[a-zA-Z0-9._%+-]+@cumminscollege\.in$/;
     if (!emailPattern.test(form.email)) {
-      setError("❌ Invalid email ID. Must be a cumminscollege.in email");
+      alert("❌ Invalid email ID");
       return;
     }
 
-    // UCE number validation
+    // UCE number validation - must start with UCE followed by 7 or 8 digits
     const ucePattern = /^UCE\d{7,8}$/i;
     if (!ucePattern.test(form.uce)) {
-      setError("❌ Invalid UCE number. Format: UCE followed by 7 or 8 digits");
+      alert("❌ Invalid UCE number. Format: UCE followed by 7 or 8 digits (e.g., UCE1234567)");
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await fetch("https://your-api-url.com/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          uce: form.uce,
-        }),
+      await axios.post(`${API_BASE_URL}/api/auth/send-otp`, {
+        email: form.email,
+        uce: form.uce,
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to send OTP");
-      }
-
       setStep(2);
-      setSuccess("✅ OTP sent to your email!");
+      alert("OTP sent to your email!");
     } catch (err) {
-      setError(err.message || "Failed to send OTP");
-    } finally {
-      setLoading(false);
+      alert(err.response?.data?.error || "Failed to send OTP");
     }
   };
 
   // Step 2: Verify OTP and Create Password
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
   const verifyOtp = async () => {
-    setError("");
-    setSuccess("");
-    
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$/;
     if (!passwordRegex.test(form.password)) {
-      setError("❌ Password must be 8-32 chars with uppercase, lowercase, digit & special character");
+      alert("❌ Password must be 8-32 chars, include 1 uppercase, 1 lowercase, 1 digit, and 1 special character.");
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await fetch("https://your-api-url.com/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || "OTP verification failed");
-      }
-
-      if (data.success) {
-        setSuccess("✅ Signup successful! You can now login.");
-        setTimeout(() => setStep(3), 2000);
+      const res = await axios.post(`${API_BASE_URL}/api/auth/verify-otp`, form);
+      if (res.data.success) {
+        alert("Signup successful! Redirecting to login...");
+        navigate("/login");
       } else {
-        setError(data.error || "OTP verification failed");
+        alert(res.data.error || "OTP verification failed");
       }
     } catch (err) {
-      setError(err.message || "OTP verification failed");
-    } finally {
-      setLoading(false);
+      alert(err.response?.data?.error || "OTP verification failed");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Student Signup</h2>
-          <p className="text-gray-600">Create your account to get started</p>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {success}
-          </div>
-        )}
+    <div className="signup-page">
+      <div className="signup-container">
+        <h2 className="signup-title">Student Signup</h2>
 
         {step === 1 && (
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
+          <div className="signup-form">
+            <div className="form-group">
+              <label>Email</label>
               <input
                 name="email"
-                type="email"
-                placeholder="student@cumminscollege.in"
+                placeholder="Enter your Email"
                 onChange={handleChange}
-                value={form.email}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 required
               />
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                UCE Number
-              </label>
+            <div className="form-group">
+              <label>UCE Number</label>
               <input
                 name="uce"
-                placeholder="UCE1234567"
+                placeholder="Enter UCE Number (e.g., UCE1234567)"
                 onChange={handleChange}
-                value={form.uce}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                pattern="^UCE\d{7,8}$"
+                title="UCE number must start with UCE followed by 7 or 8 digits"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Format: UCE followed by 7-8 digits
-              </p>
             </div>
-            
-            <button
-              onClick={sendOtp}
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Sending..." : "Send OTP"}
+            <button onClick={sendOtp} className="signup-btn">
+              Send OTP
             </button>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                OTP Code
-              </label>
+          <div className="signup-form">
+            <div className="form-group">
+              <label>OTP</label>
               <input
                 name="otp"
-                placeholder="Enter 6-digit OTP"
+                placeholder="Enter OTP"
                 onChange={handleChange}
-                value={form.otp}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                maxLength="6"
                 required
               />
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Create Password
-              </label>
+            <div className="form-group">
+              <label>Password</label>
               <input
                 type="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="Create Password"
                 onChange={handleChange}
-                value={form.password}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 required
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$"
+                title="Password must be 8-32 characters long and include 1 lowercase, 1 uppercase, 1 digit, and 1 special character."
               />
-              <p className="text-xs text-gray-500 mt-1">
-                8-32 characters with uppercase, lowercase, digit & special character
-              </p>
             </div>
 
-            <button
-              onClick={verifyOtp}
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Verifying..." : "Verify & Signup"}
-            </button>
-            
-            <button
-              onClick={() => setStep(1)}
-              className="w-full text-indigo-600 hover:text-indigo-700 font-medium py-2 text-sm"
-            >
-              ← Back to Email Entry
+            <button onClick={verifyOtp} className="signup-btn">
+              Verify & Signup
             </button>
           </div>
         )}
 
-        {step === 3 && (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-4">✅</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Success!</h3>
-            <p className="text-gray-600 mb-6">Your account has been created successfully.</p>
-            <button
-              onClick={() => window.location.href = '/login'}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg transition"
-            >
-              Go to Login
-            </button>
-          </div>
-        )}
-
-        {step !== 3 && (
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Already have an account?{" "}
-            <a href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
-              Login here
-            </a>
-          </p>
-        )}
+        <p className="login-link">
+          Already have an account?{" "}
+          <Link to="/login">Login here</Link>
+        </p>
       </div>
     </div>
   );
