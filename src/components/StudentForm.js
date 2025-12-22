@@ -30,7 +30,7 @@ function StudentForm() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
-  //const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const saveTimer = useRef(null);
   const lastSavedRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -40,6 +40,9 @@ function StudentForm() {
     localStorage.getItem("verifiedEmail") ||
     "";
 
+  const getLoggedInUCE = () =>
+    localStorage.getItem("studentUCE") || "";
+
   const getDraftKey = (email) =>
     email ? `studentForm:${email.toLowerCase()}` : null;
 
@@ -48,13 +51,16 @@ function StudentForm() {
   useEffect(() => {
     const boot = async () => {
       const loggedInEmail = getLoggedInEmail();
-      const loggedInUCE = localStorage.getItem("studentUCE") || "";
+      const loggedInUCE = getLoggedInUCE();
 
-      if (loggedInEmail && formData.email !== loggedInEmail) {
+      console.log("🔍 Boot - Email:", loggedInEmail, "UCE:", loggedInUCE);
+
+      // ✅ FIXED: Set email and UCE immediately when component mounts
+      if (loggedInEmail) {
         setFormData((prev) => ({ 
           ...prev, 
           email: loggedInEmail,
-          uce: loggedInUCE
+          uce: loggedInUCE || prev.uce // Use logged in UCE or keep existing
         }));
       }
 
@@ -64,7 +70,12 @@ function StudentForm() {
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
-            setFormData((prev) => ({ ...prev, ...parsed }));
+            setFormData((prev) => ({ 
+              ...prev, 
+              ...parsed,
+              email: loggedInEmail, // Ensure email is correct
+              uce: parsed.uce || loggedInUCE // Use draft UCE or logged in UCE
+            }));
             if (parsed.profilePhoto) {
               setPhotoPreview(parsed.profilePhoto);
             }
@@ -77,13 +88,12 @@ function StudentForm() {
       }
 
       if (loggedInEmail) {
-       // setIsLoading(true);
+        setIsLoading(true);
         try {
           const res = await axios.get(
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
-            //  timeout: 10000
             }
           );
           if (res.data?.success && res.data?.student) {
@@ -115,10 +125,16 @@ function StudentForm() {
             }
           }
         } catch (err) {
-          console.error("Prefill fetch error:", err?.response?.data || err.message);}
-        // } finally {
-        //   setIsLoading(false);
-        // }
+          console.error("Prefill fetch error:", err?.response?.data || err.message);
+          // ✅ If fetch fails, still keep the UCE from localStorage
+          setFormData((prev) => ({ 
+            ...prev, 
+            email: loggedInEmail,
+            uce: loggedInUCE || prev.uce
+          }));
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
     boot();
@@ -126,8 +142,10 @@ function StudentForm() {
 
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === "studentEmail" || e.key === "verifiedEmail") {
+      if (e.key === "studentEmail" || e.key === "verifiedEmail" || e.key === "studentUCE") {
         const newEmail = getLoggedInEmail();
+        const newUCE = getLoggedInUCE();
+        
         if (!newEmail) {
           clearForm();
         } else {
@@ -141,18 +159,19 @@ function StudentForm() {
                   ...INITIAL,
                   ...parsed,
                   email: newEmail,
+                  uce: parsed.uce || newUCE
                 }));
                 if (parsed.profilePhoto) {
                   setPhotoPreview(parsed.profilePhoto);
                 }
-                lastSavedRef.current = e.newValue;
+                lastSavedRef.current = JSON.stringify(parsed);
                 return;
               } catch (err) {
                 console.error("Storage parse error:", err);
               }
             }
           }
-          setFormData({ ...INITIAL, email: newEmail });
+          setFormData({ ...INITIAL, email: newEmail, uce: newUCE });
           setPhotoPreview("");
           lastSavedRef.current = null;
         }
@@ -249,7 +268,6 @@ function StudentForm() {
       
       await axios.post(`${API_BASE}/api/students`, payload, {
         headers: { "x-user-email": logged },
-       // timeout: 10000
       });
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
@@ -294,19 +312,18 @@ function StudentForm() {
       return;
     }
 
-    //setIsLoading(true);
+    setIsLoading(true);
   
     try {
       const logged = getLoggedInEmail();
       if (!logged) {
         setMessage("❌ Please login first.");
-        //setIsLoading(false);
+        setIsLoading(false);
         return;
       }
       
       await axios.post(`${API_BASE}/api/students`, formData, {
         headers: { "x-user-email": logged },
-        //timeout: 15000
       });
       
       setMessage("✅ Student details saved successfully!");
@@ -320,11 +337,11 @@ function StudentForm() {
       lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
     } catch (err) {
       console.error("Submit error:", err);
-     // const errorMsg = err?.response?.data?.message || err.message;
-      setMessage(`❌ Error saving student details: ${errorMsg}`);}
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      const errorMsg = err?.response?.data?.message || err.message;
+      setMessage(`❌ Error saving student details: ${errorMsg}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -553,8 +570,9 @@ function StudentForm() {
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
-        <button type="submit" >Save /Update</button>
-         
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save / Update"}
+        </button>
       </form>
     </div>
   );
