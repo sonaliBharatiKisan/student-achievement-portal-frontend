@@ -5,7 +5,7 @@ import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
-// Use environment variable for API base URL
+// ✅ Use environment variable for API base URL (Render/production ready)
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const INITIAL = {
@@ -83,7 +83,7 @@ function StudentForm() {
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
-              timeout: 10000 // 10 second timeout
+              timeout: 10000
             }
           );
           if (res.data?.success && res.data?.student) {
@@ -116,7 +116,6 @@ function StudentForm() {
           }
         } catch (err) {
           console.error("Prefill fetch error:", err?.response?.data || err.message);
-          // Don't show error to user for prefill failures
         } finally {
           setIsLoading(false);
         }
@@ -255,7 +254,6 @@ function StudentForm() {
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
       console.error("Auto-save error:", err?.response?.data || err.message);
-      // Silent fail for auto-save
     }
   };
 
@@ -263,8 +261,9 @@ function StudentForm() {
     e.preventDefault();
     let newErrors = {};
 
-    if (!/^UCE\d{7}$/.test(formData.uce)) {
-      newErrors.uce = "❌ UCE must be in format: UCE followed by 7 digits (e.g., UCE1234567).";
+    // ✅ Updated UCE validation to support 7 or 8 digits
+    if (!/^UCE\d{7,8}$/i.test(formData.uce)) {
+      newErrors.uce = "❌ UCE must be in format: UCE followed by 7 or 8 digits (e.g., UCE1234567).";
     }
 
     if (!/^[A-Za-z\s]+$/.test(formData.name)) {
@@ -306,7 +305,7 @@ function StudentForm() {
       
       await axios.post(`${API_BASE}/api/students`, formData, {
         headers: { "x-user-email": logged },
-        timeout: 15000 // 15 second timeout for submit
+        timeout: 15000
       });
       
       setMessage("✅ Student details saved successfully!");
