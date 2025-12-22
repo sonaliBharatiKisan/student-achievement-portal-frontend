@@ -5,7 +5,7 @@ import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
-// ✅ Use environment variable for API base URL (Render/production ready)
+// Use environment variable or default to localhost
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const INITIAL = {
@@ -40,9 +40,6 @@ function StudentForm() {
     localStorage.getItem("verifiedEmail") ||
     "";
 
-  const getLoggedInUCE = () =>
-    localStorage.getItem("studentUCE") || "";
-
   const getDraftKey = (email) =>
     email ? `studentForm:${email.toLowerCase()}` : null;
 
@@ -51,16 +48,13 @@ function StudentForm() {
   useEffect(() => {
     const boot = async () => {
       const loggedInEmail = getLoggedInEmail();
-      const loggedInUCE = getLoggedInUCE();
+      const loggedInUCE = localStorage.getItem("studentUCE") || "";
 
-      console.log("🔍 Boot - Email:", loggedInEmail, "UCE:", loggedInUCE);
-
-      // ✅ FIXED: Set email and UCE immediately when component mounts
-      if (loggedInEmail) {
+      if (loggedInEmail && formData.email !== loggedInEmail) {
         setFormData((prev) => ({ 
           ...prev, 
           email: loggedInEmail,
-          uce: loggedInUCE || prev.uce // Use logged in UCE or keep existing
+          uce: loggedInUCE
         }));
       }
 
@@ -70,12 +64,7 @@ function StudentForm() {
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
-            setFormData((prev) => ({ 
-              ...prev, 
-              ...parsed,
-              email: loggedInEmail, // Ensure email is correct
-              uce: parsed.uce || loggedInUCE // Use draft UCE or logged in UCE
-            }));
+            setFormData((prev) => ({ ...prev, ...parsed }));
             if (parsed.profilePhoto) {
               setPhotoPreview(parsed.profilePhoto);
             }
@@ -94,6 +83,7 @@ function StudentForm() {
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
+              timeout: 10000 // 10 second timeout
             }
           );
           if (res.data?.success && res.data?.student) {
@@ -101,7 +91,7 @@ function StudentForm() {
             const prefill = {
               uce: s.uce || s.uce_no || loggedInUCE || "",
               name: s.name || "",
-              dob: s.dob || "",
+              dob: s.dob ? s.dob.split('T')[0] : "", // Format date for input
               gender: s.gender || "",
               bloodGroup: s.bloodGroup || "",
               address: s.address || "",
@@ -126,12 +116,9 @@ function StudentForm() {
           }
         } catch (err) {
           console.error("Prefill fetch error:", err?.response?.data || err.message);
-          // ✅ If fetch fails, still keep the UCE from localStorage
-          setFormData((prev) => ({ 
-            ...prev, 
-            email: loggedInEmail,
-            uce: loggedInUCE || prev.uce
-          }));
+          if (err.code === 'ECONNABORTED') {
+            setMessage("⚠️ Connection timeout. Please check your internet connection.");
+          }
         } finally {
           setIsLoading(false);
         }
@@ -142,10 +129,8 @@ function StudentForm() {
 
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === "studentEmail" || e.key === "verifiedEmail" || e.key === "studentUCE") {
+      if (e.key === "studentEmail" || e.key === "verifiedEmail") {
         const newEmail = getLoggedInEmail();
-        const newUCE = getLoggedInUCE();
-        
         if (!newEmail) {
           clearForm();
         } else {
@@ -159,19 +144,18 @@ function StudentForm() {
                   ...INITIAL,
                   ...parsed,
                   email: newEmail,
-                  uce: parsed.uce || newUCE
                 }));
                 if (parsed.profilePhoto) {
                   setPhotoPreview(parsed.profilePhoto);
                 }
-                lastSavedRef.current = JSON.stringify(parsed);
+                lastSavedRef.current = e.newValue;
                 return;
               } catch (err) {
                 console.error("Storage parse error:", err);
               }
             }
           }
-          setFormData({ ...INITIAL, email: newEmail, uce: newUCE });
+          setFormData({ ...INITIAL, email: newEmail });
           setPhotoPreview("");
           lastSavedRef.current = null;
         }
@@ -187,19 +171,15 @@ function StudentForm() {
     const activeEmail = logged || data.email;
     const draftKey = getDraftKey(activeEmail);
     if (draftKey) {
-      try {
-        const toSave = JSON.stringify({ ...data, email: activeEmail });
-        localStorage.setItem(draftKey, toSave);
+      const toSave = JSON.stringify({ ...data, email: activeEmail });
+      localStorage.setItem(draftKey, toSave);
 
-        if (logged && isValidEmail(logged)) {
-          if (saveTimer.current) clearTimeout(saveTimer.current);
-          saveTimer.current = setTimeout(
-            () => saveToServer({ ...data, email: logged }),
-            800
-          );
-        }
-      } catch (err) {
-        console.error("Draft save error:", err);
+      if (logged && isValidEmail(logged)) {
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(
+          () => saveToServer({ ...data, email: logged }),
+          800
+        );
       }
     }
   };
@@ -229,7 +209,7 @@ function StudentForm() {
         persistDraftAndMaybeSave({ ...formData, profilePhoto: base64 });
       };
       reader.onerror = () => {
-        setErrors((prev) => ({ ...prev, profilePhoto: "❌ Failed to read photo file" }));
+        setErrors((prev) => ({ ...prev, profilePhoto: "❌ Error reading file" }));
       };
       reader.readAsDataURL(file);
     }
@@ -247,13 +227,7 @@ function StudentForm() {
   const clearForm = () => {
     const email = getLoggedInEmail();
     const dk = getDraftKey(email);
-    if (dk) {
-      try {
-        localStorage.removeItem(dk);
-      } catch (err) {
-        console.error("Clear form error:", err);
-      }
-    }
+    if (dk) localStorage.removeItem(dk);
 
     setFormData(INITIAL);
     setErrors({});
@@ -267,7 +241,11 @@ function StudentForm() {
       if (!logged) return;
       
       await axios.post(`${API_BASE}/api/students`, payload, {
-        headers: { "x-user-email": logged },
+        headers: { 
+          "x-user-email": logged,
+          "Content-Type": "application/json"
+        },
+        timeout: 10000
       });
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
@@ -279,9 +257,8 @@ function StudentForm() {
     e.preventDefault();
     let newErrors = {};
 
-    // ✅ Updated UCE validation to support 7 or 8 digits
-    if (!/^UCE\d{7,8}$/i.test(formData.uce)) {
-      newErrors.uce = "❌ UCE must be in format: UCE followed by 7 or 8 digits (e.g., UCE1234567).";
+    if (!/^UCE\d{7}$/.test(formData.uce)) {
+      newErrors.uce = "❌ UCE must be in format: UCE followed by 7 digits (e.g., UCE1234567).";
     }
 
     if (!/^[A-Za-z\s]+$/.test(formData.name)) {
@@ -313,7 +290,6 @@ function StudentForm() {
     }
 
     setIsLoading(true);
-  
     try {
       const logged = getLoggedInEmail();
       if (!logged) {
@@ -323,7 +299,11 @@ function StudentForm() {
       }
       
       await axios.post(`${API_BASE}/api/students`, formData, {
-        headers: { "x-user-email": logged },
+        headers: { 
+          "x-user-email": logged,
+          "Content-Type": "application/json"
+        },
+        timeout: 15000
       });
       
       setMessage("✅ Student details saved successfully!");
@@ -337,8 +317,8 @@ function StudentForm() {
       lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
     } catch (err) {
       console.error("Submit error:", err);
-      const errorMsg = err?.response?.data?.message || err.message;
-      setMessage(`❌ Error saving student details: ${errorMsg}`);
+      const errMsg = err?.response?.data?.message || err.message;
+      setMessage(`❌ Error saving student details: ${errMsg}`);
     } finally {
       setIsLoading(false);
     }
@@ -373,15 +353,9 @@ function StudentForm() {
             onChange={handlePhotoChange}
             className="file-input"
             id="photo-upload"
-            disabled={isLoading}
           />
           {photoPreview && (
-            <button 
-              type="button" 
-              onClick={handleRemovePhoto} 
-              className="remove-btn"
-              disabled={isLoading}
-            >
+            <button type="button" onClick={handleRemovePhoto} className="remove-btn">
               Remove Photo
             </button>
           )}
@@ -392,6 +366,8 @@ function StudentForm() {
       {message && (
         <p className={message.startsWith("✅") ? "success" : "error"}>{message}</p>
       )}
+
+      {isLoading && <p className="loading">Loading...</p>}
 
       <form onSubmit={handleSubmit}>
         <label htmlFor="uce">UCE<span className="required">*</span></label>
@@ -414,7 +390,6 @@ function StudentForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          disabled={isLoading}
         />
         {errors.name && <p className="error">{errors.name}</p>}
 
@@ -428,7 +403,6 @@ function StudentForm() {
           min="2000-01-01"
           max={new Date().toISOString().split("T")[0]}
           required
-          disabled={isLoading}
         />
         {errors.dob && <p className="error">{errors.dob}</p>}
 
@@ -439,7 +413,6 @@ function StudentForm() {
           value={formData.gender}
           onChange={handleChange}
           required
-          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="Male">Male</option>
@@ -454,7 +427,6 @@ function StudentForm() {
           value={formData.bloodGroup}
           onChange={handleChange}
           required
-          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="A+">A+</option>
@@ -474,7 +446,6 @@ function StudentForm() {
           value={formData.year}
           onChange={handleChange}
           required
-          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="1st">1st</option>
@@ -490,7 +461,6 @@ function StudentForm() {
           value={formData.branch}
           onChange={handleChange}
           required
-          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="Computer">Comp</option>
@@ -507,7 +477,6 @@ function StudentForm() {
           value={formData.division}
           onChange={handleChange}
           required
-          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="A">A</option>
@@ -522,7 +491,6 @@ function StudentForm() {
           value={formData.address}
           onChange={handleChange}
           required
-          disabled={isLoading}
         ></textarea>
 
         <label htmlFor="phone">Phone Number<span className="required">*</span></label>
@@ -533,7 +501,6 @@ function StudentForm() {
           value={formData.phone}
           onChange={handleChange}
           required
-          disabled={isLoading}
         />
         {errors.phone && <p className="error">{errors.phone}</p>}
 
@@ -544,7 +511,6 @@ function StudentForm() {
           id="altPhone"
           value={formData.altPhone}
           onChange={handleChange}
-          disabled={isLoading}
         />
         {errors.altPhone && <p className="error">{errors.altPhone}</p>}
 
@@ -566,7 +532,6 @@ function StudentForm() {
           id="altEmail"
           value={formData.altEmail}
           onChange={handleChange}
-          disabled={isLoading}
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
