@@ -3,14 +3,13 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import "./Signup.css";
 
+// ✅ API base URL from environment variable (production-ready for Render)
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 function Signup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: "", uce: "", otp: "", password: "" });
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  // Get API URL from environment variable or default to localhost
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -30,24 +29,15 @@ function Signup() {
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+      await axios.post(`${API_BASE_URL}/api/auth/send-otp`, {
         email: form.email,
         uce: form.uce,
       });
-      
       setStep(2);
       alert("OTP sent to your email!");
-      
-      // If in testing mode, show the OTP
-      if (response.data.testing && response.data.otp) {
-        alert(`Testing Mode - Your OTP is: ${response.data.otp}`);
-      }
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send OTP");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -59,9 +49,8 @@ function Signup() {
       return;
     }
 
-    setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/auth/verify-otp`, form);
+      const res = await axios.post(`${API_BASE_URL}/api/auth/verify-otp`, form);
       if (res.data.success) {
         alert("Signup successful! Redirecting to login...");
         navigate("/login");
@@ -70,8 +59,6 @@ function Signup() {
       }
     } catch (err) {
       alert(err.response?.data?.error || "OTP verification failed");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -88,8 +75,6 @@ function Signup() {
                 name="email"
                 placeholder="Enter your Email"
                 onChange={handleChange}
-                value={form.email}
-                disabled={loading}
                 required
               />
             </div>
@@ -99,15 +84,13 @@ function Signup() {
                 name="uce"
                 placeholder="Enter UCE Number (e.g., UCE1234567)"
                 onChange={handleChange}
-                value={form.uce}
                 pattern="^UCE\d{7,8}$"
                 title="UCE number must start with UCE followed by 7 or 8 digits"
-                disabled={loading}
                 required
               />
             </div>
-            <button onClick={sendOtp} className="signup-btn" disabled={loading}>
-              {loading ? "Sending..." : "Send OTP"}
+            <button onClick={sendOtp} className="signup-btn">
+              Send OTP
             </button>
           </div>
         )}
@@ -120,8 +103,6 @@ function Signup() {
                 name="otp"
                 placeholder="Enter OTP"
                 onChange={handleChange}
-                value={form.otp}
-                disabled={loading}
                 required
               />
             </div>
@@ -132,16 +113,14 @@ function Signup() {
                 name="password"
                 placeholder="Create Password"
                 onChange={handleChange}
-                value={form.password}
-                disabled={loading}
                 required
                 pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$"
                 title="Password must be 8-32 characters long and include 1 lowercase, 1 uppercase, 1 digit, and 1 special character."
               />
             </div>
 
-            <button onClick={verifyOtp} className="signup-btn" disabled={loading}>
-              {loading ? "Verifying..." : "Verify & Signup"}
+            <button onClick={verifyOtp} className="signup-btn">
+              Verify & Signup
             </button>
           </div>
         )}
