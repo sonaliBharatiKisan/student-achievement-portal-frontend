@@ -30,7 +30,7 @@ function StudentForm() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  //const [isLoading, setIsLoading] = useState(false);
   const saveTimer = useRef(null);
   const lastSavedRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -77,13 +77,13 @@ function StudentForm() {
       }
 
       if (loggedInEmail) {
-        setIsLoading(true);
+       // setIsLoading(true);
         try {
           const res = await axios.get(
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
-              timeout: 10000
+            //  timeout: 10000
             }
           );
           if (res.data?.success && res.data?.student) {
@@ -115,10 +115,10 @@ function StudentForm() {
             }
           }
         } catch (err) {
-          console.error("Prefill fetch error:", err?.response?.data || err.message);
-        } finally {
-          setIsLoading(false);
-        }
+          console.error("Prefill fetch error:", err?.response?.data || err.message);}
+        // } finally {
+        //   setIsLoading(false);
+        // }
       }
     };
     boot();
@@ -249,7 +249,7 @@ function StudentForm() {
       
       await axios.post(`${API_BASE}/api/students`, payload, {
         headers: { "x-user-email": logged },
-        timeout: 10000
+       // timeout: 10000
       });
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
@@ -294,18 +294,19 @@ function StudentForm() {
       return;
     }
 
-    setIsLoading(true);
+    //setIsLoading(true);
+  
     try {
       const logged = getLoggedInEmail();
       if (!logged) {
         setMessage("❌ Please login first.");
-        setIsLoading(false);
+        //setIsLoading(false);
         return;
       }
       
       await axios.post(`${API_BASE}/api/students`, formData, {
         headers: { "x-user-email": logged },
-        timeout: 15000
+        //timeout: 15000
       });
       
       setMessage("✅ Student details saved successfully!");
@@ -319,11 +320,11 @@ function StudentForm() {
       lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
     } catch (err) {
       console.error("Submit error:", err);
-      const errorMsg = err?.response?.data?.message || err.message;
-      setMessage(`❌ Error saving student details: ${errorMsg}`);
-    } finally {
-      setIsLoading(false);
-    }
+     // const errorMsg = err?.response?.data?.message || err.message;
+      setMessage(`❌ Error saving student details: ${errorMsg}`);}
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (
@@ -552,9 +553,8 @@ function StudentForm() {
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save / Update"}
-        </button>
+        <button type="submit" >Save /Update</button>
+         
       </form>
     </div>
   );
