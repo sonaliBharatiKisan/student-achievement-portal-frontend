@@ -5,7 +5,8 @@ import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+// Use environment variable for API base URL
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const INITIAL = {
   uce: "",
@@ -29,6 +30,7 @@ function StudentForm() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const saveTimer = useRef(null);
   const lastSavedRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -46,9 +48,14 @@ function StudentForm() {
   useEffect(() => {
     const boot = async () => {
       const loggedInEmail = getLoggedInEmail();
+      const loggedInUCE = localStorage.getItem("studentUCE") || "";
 
       if (loggedInEmail && formData.email !== loggedInEmail) {
-        setFormData((prev) => ({ ...prev, email: loggedInEmail }));
+        setFormData((prev) => ({ 
+          ...prev, 
+          email: loggedInEmail,
+          uce: loggedInUCE
+        }));
       }
 
       const draftKey = getDraftKey(loggedInEmail);
@@ -70,15 +77,19 @@ function StudentForm() {
       }
 
       if (loggedInEmail) {
+        setIsLoading(true);
         try {
           const res = await axios.get(
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
-            { headers: { "x-user-email": loggedInEmail } }
+            { 
+              headers: { "x-user-email": loggedInEmail },
+              timeout: 10000 // 10 second timeout
+            }
           );
           if (res.data?.success && res.data?.student) {
             const s = res.data.student;
             const prefill = {
-              uce: s.uce || "",
+              uce: s.uce || s.uce_no || loggedInUCE || "",
               name: s.name || "",
               dob: s.dob || "",
               gender: s.gender || "",
@@ -105,6 +116,9 @@ function StudentForm() {
           }
         } catch (err) {
           console.error("Prefill fetch error:", err?.response?.data || err.message);
+          // Don't show error to user for prefill failures
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -155,15 +169,19 @@ function StudentForm() {
     const activeEmail = logged || data.email;
     const draftKey = getDraftKey(activeEmail);
     if (draftKey) {
-      const toSave = JSON.stringify({ ...data, email: activeEmail });
-      localStorage.setItem(draftKey, toSave);
+      try {
+        const toSave = JSON.stringify({ ...data, email: activeEmail });
+        localStorage.setItem(draftKey, toSave);
 
-      if (logged && isValidEmail(logged)) {
-        if (saveTimer.current) clearTimeout(saveTimer.current);
-        saveTimer.current = setTimeout(
-          () => saveToServer({ ...data, email: logged }),
-          800
-        );
+        if (logged && isValidEmail(logged)) {
+          if (saveTimer.current) clearTimeout(saveTimer.current);
+          saveTimer.current = setTimeout(
+            () => saveToServer({ ...data, email: logged }),
+            800
+          );
+        }
+      } catch (err) {
+        console.error("Draft save error:", err);
       }
     }
   };
@@ -192,6 +210,9 @@ function StudentForm() {
         setErrors((prev) => ({ ...prev, profilePhoto: "" }));
         persistDraftAndMaybeSave({ ...formData, profilePhoto: base64 });
       };
+      reader.onerror = () => {
+        setErrors((prev) => ({ ...prev, profilePhoto: "❌ Failed to read photo file" }));
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -208,7 +229,13 @@ function StudentForm() {
   const clearForm = () => {
     const email = getLoggedInEmail();
     const dk = getDraftKey(email);
-    if (dk) localStorage.removeItem(dk);
+    if (dk) {
+      try {
+        localStorage.removeItem(dk);
+      } catch (err) {
+        console.error("Clear form error:", err);
+      }
+    }
 
     setFormData(INITIAL);
     setErrors({});
@@ -220,12 +247,15 @@ function StudentForm() {
     try {
       const logged = getLoggedInEmail();
       if (!logged) return;
+      
       await axios.post(`${API_BASE}/api/students`, payload, {
         headers: { "x-user-email": logged },
+        timeout: 10000
       });
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
       console.error("Auto-save error:", err?.response?.data || err.message);
+      // Silent fail for auto-save
     }
   };
 
@@ -265,26 +295,35 @@ function StudentForm() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const logged = getLoggedInEmail();
       if (!logged) {
         setMessage("❌ Please login first.");
+        setIsLoading(false);
         return;
       }
+      
       await axios.post(`${API_BASE}/api/students`, formData, {
         headers: { "x-user-email": logged },
+        timeout: 15000 // 15 second timeout for submit
       });
+      
       setMessage("✅ Student details saved successfully!");
       const dk = getDraftKey(logged);
-      if (dk)
+      if (dk) {
         localStorage.setItem(
           dk,
           JSON.stringify({ ...formData, email: logged })
         );
+      }
       lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
     } catch (err) {
-      console.error(err);
-      setMessage("❌ Error saving student details.");
+      console.error("Submit error:", err);
+      const errorMsg = err?.response?.data?.message || err.message;
+      setMessage(`❌ Error saving student details: ${errorMsg}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -317,9 +356,15 @@ function StudentForm() {
             onChange={handlePhotoChange}
             className="file-input"
             id="photo-upload"
+            disabled={isLoading}
           />
           {photoPreview && (
-            <button type="button" onClick={handleRemovePhoto} className="remove-btn">
+            <button 
+              type="button" 
+              onClick={handleRemovePhoto} 
+              className="remove-btn"
+              disabled={isLoading}
+            >
               Remove Photo
             </button>
           )}
@@ -352,6 +397,7 @@ function StudentForm() {
           value={formData.name}
           onChange={handleChange}
           required
+          disabled={isLoading}
         />
         {errors.name && <p className="error">{errors.name}</p>}
 
@@ -365,6 +411,7 @@ function StudentForm() {
           min="2000-01-01"
           max={new Date().toISOString().split("T")[0]}
           required
+          disabled={isLoading}
         />
         {errors.dob && <p className="error">{errors.dob}</p>}
 
@@ -375,6 +422,7 @@ function StudentForm() {
           value={formData.gender}
           onChange={handleChange}
           required
+          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="Male">Male</option>
@@ -389,6 +437,7 @@ function StudentForm() {
           value={formData.bloodGroup}
           onChange={handleChange}
           required
+          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="A+">A+</option>
@@ -408,6 +457,7 @@ function StudentForm() {
           value={formData.year}
           onChange={handleChange}
           required
+          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="1st">1st</option>
@@ -423,6 +473,7 @@ function StudentForm() {
           value={formData.branch}
           onChange={handleChange}
           required
+          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="Computer">Comp</option>
@@ -439,6 +490,7 @@ function StudentForm() {
           value={formData.division}
           onChange={handleChange}
           required
+          disabled={isLoading}
         >
           <option value="">--Select--</option>
           <option value="A">A</option>
@@ -453,6 +505,7 @@ function StudentForm() {
           value={formData.address}
           onChange={handleChange}
           required
+          disabled={isLoading}
         ></textarea>
 
         <label htmlFor="phone">Phone Number<span className="required">*</span></label>
@@ -463,6 +516,7 @@ function StudentForm() {
           value={formData.phone}
           onChange={handleChange}
           required
+          disabled={isLoading}
         />
         {errors.phone && <p className="error">{errors.phone}</p>}
 
@@ -473,6 +527,7 @@ function StudentForm() {
           id="altPhone"
           value={formData.altPhone}
           onChange={handleChange}
+          disabled={isLoading}
         />
         {errors.altPhone && <p className="error">{errors.altPhone}</p>}
 
@@ -494,12 +549,16 @@ function StudentForm() {
           id="altEmail"
           value={formData.altEmail}
           onChange={handleChange}
+          disabled={isLoading}
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
-        <button type="submit">Save / Update</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save / Update"}
+        </button>
       </form>
     </div>
   );
 }
+
 export default StudentForm;
