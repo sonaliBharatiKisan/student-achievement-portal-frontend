@@ -1,11 +1,15 @@
+// ============================================================================
+// FILE 4: frontend/src/components/StudentForm.js
+// This file already has the correct logic - NO CHANGES NEEDED
+// But here it is for completeness
+// ============================================================================
+
 /* eslint-disable react-hooks/exhaustive-deps */
-//frontend/src/components/StudentForm.js
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
-// Use environment variable or default to localhost
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const INITIAL = {
@@ -53,7 +57,6 @@ function StudentForm() {
       const loggedInEmail = getLoggedInEmail();
       const loggedInUCE = getLoggedInUCE();
 
-      // ✅ Set email and UCE from localStorage immediately
       if (loggedInEmail) {
         setFormData((prev) => ({ 
           ...prev, 
@@ -62,7 +65,6 @@ function StudentForm() {
         }));
       }
 
-      // Check for draft
       const draftKey = getDraftKey(loggedInEmail);
       if (draftKey) {
         const raw = localStorage.getItem(draftKey);
@@ -72,8 +74,8 @@ function StudentForm() {
             setFormData((prev) => ({ 
               ...prev, 
               ...parsed,
-              email: loggedInEmail, // ✅ Ensure email stays
-              uce: loggedInUCE || parsed.uce // ✅ Ensure UCE stays
+              email: loggedInEmail,
+              uce: loggedInUCE || parsed.uce
             }));
             if (parsed.profilePhoto) {
               setPhotoPreview(parsed.profilePhoto);
@@ -86,7 +88,6 @@ function StudentForm() {
         }
       }
 
-      // Fetch from server if logged in
       if (loggedInEmail) {
         setIsLoading(true);
         try {
@@ -573,3 +574,4 @@ function StudentForm() {
 }
 
 export default StudentForm;
+
