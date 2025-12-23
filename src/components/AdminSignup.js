@@ -26,10 +26,15 @@ function AdminSignup() {
 
     try {
       const res = await axios.post(`${API_BASE_URL}/admin/send-otp`, {
-        email: form.email,
+        email: form.email.toLowerCase(), // ✅ Ensure lowercase
       });
-      setMessage(res.data.message || "OTP sent successfully!");
-      setStep(2);
+      
+      if (res.data.success) {
+        setMessage(res.data.message || "OTP sent successfully! Use: 123456");
+        setStep(2);
+      } else {
+        setMessage(res.data.error || "Failed to send OTP");
+      }
     } catch (err) {
       console.error("Send OTP error:", err);
       setMessage(err.response?.data?.error || "Failed to send OTP. Please try again.");
@@ -53,10 +58,17 @@ function AdminSignup() {
     setMessage("");
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/admin/verify-otp`, form);
+      const res = await axios.post(`${API_BASE_URL}/admin/verify-otp`, {
+        email: form.email.toLowerCase(), // ✅ Ensure lowercase
+        otp: form.otp,
+        password: form.password
+      });
+      
       if (res.data.success) {
-        alert("✅ Signup successful! Redirecting to login...");
-        navigate("/admin/login");
+        setMessage("✅ Signup successful! Redirecting to login...");
+        setTimeout(() => {
+          navigate("/admin/login");
+        }, 1500);
       } else {
         setMessage(res.data.error || "OTP verification failed");
       }
@@ -87,7 +99,7 @@ function AdminSignup() {
         </p>
 
         {message && (
-          <p className={`admin-signup-message ${message.includes("success") ? "success" : "error"}`}>
+          <p className={`admin-signup-message ${message.includes("success") || message.includes("✅") ? "success" : "error"}`}>
             {message}
           </p>
         )}
@@ -119,12 +131,13 @@ function AdminSignup() {
 
         {step === 2 && (
           <div className="admin-signup-form">
+            <p className="otp-hint">💡 Hardcoded OTP: <strong>123456</strong></p>
             <div className="form-group">
               <label>OTP</label>
               <input
                 type="text"
                 name="otp"
-                placeholder="Enter 6-digit OTP"
+                placeholder="Enter 6-digit OTP (123456)"
                 value={form.otp}
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
