@@ -25,8 +25,8 @@ function AdminSignup() {
     setMessage("");
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/admin/send-otp`, {
-        email: form.email.toLowerCase(), // ✅ Ensure lowercase
+      const res = await axios.post(`${API_BASE_URL}/admin/send-otp`, {
+        email: form.email.toLowerCase(),
       });
       
       if (res.data.success) {
@@ -59,7 +59,7 @@ function AdminSignup() {
 
     try {
       const res = await axios.post(`${API_BASE_URL}/admin/verify-otp`, {
-        email: form.email.toLowerCase(), // ✅ Ensure lowercase
+        email: form.email.toLowerCase(),
         otp: form.otp,
         password: form.password
       });
@@ -93,9 +93,9 @@ function AdminSignup() {
   return (
     <div className="admin-signup-page">
       <div className="admin-signup-container">
-        <h2 className="admin-signup-title">Main Admin Signup</h2>
+        <h2 className="admin-signup-title">Admin Signup</h2>
         <p className="admin-signup-subtitle">
-          Only sonalibharti430@gmail.com can signup
+          Enter your email to receive OTP
         </p>
 
         {message && (
