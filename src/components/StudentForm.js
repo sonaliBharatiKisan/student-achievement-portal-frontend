@@ -1,16 +1,15 @@
-// ============================================================================
-// FILE 4: frontend/src/components/StudentForm.js
-// This file already has the correct logic - NO CHANGES NEEDED
-// But here it is for completeness
-// ============================================================================
-
 /* eslint-disable react-hooks/exhaustive-deps */
+//frontend/src/components/StudentForm.js
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// ✅ Dynamic API URL - works in both development and production
+const API_BASE = process.env.REACT_APP_API_URL || 
+                 (process.env.NODE_ENV === 'production' 
+                   ? window.location.origin 
+                   : "http://localhost:5000");
 
 const INITIAL = {
   uce: "",
@@ -34,7 +33,6 @@ function StudentForm() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const saveTimer = useRef(null);
   const lastSavedRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -44,9 +42,6 @@ function StudentForm() {
     localStorage.getItem("verifiedEmail") ||
     "";
 
-  const getLoggedInUCE = () =>
-    localStorage.getItem("studentUCE") || "";
-
   const getDraftKey = (email) =>
     email ? `studentForm:${email.toLowerCase()}` : null;
 
@@ -55,9 +50,9 @@ function StudentForm() {
   useEffect(() => {
     const boot = async () => {
       const loggedInEmail = getLoggedInEmail();
-      const loggedInUCE = getLoggedInUCE();
+      const loggedInUCE = localStorage.getItem("studentUCE") || "";
 
-      if (loggedInEmail) {
+      if (loggedInEmail && formData.email !== loggedInEmail) {
         setFormData((prev) => ({ 
           ...prev, 
           email: loggedInEmail,
@@ -71,39 +66,31 @@ function StudentForm() {
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
-            setFormData((prev) => ({ 
-              ...prev, 
-              ...parsed,
-              email: loggedInEmail,
-              uce: loggedInUCE || parsed.uce
-            }));
+            setFormData((prev) => ({ ...prev, ...parsed }));
             if (parsed.profilePhoto) {
               setPhotoPreview(parsed.profilePhoto);
             }
             lastSavedRef.current = JSON.stringify(parsed);
             return;
-          } catch (err) {
-            console.error("Draft parse error:", err);
-          }
+          } catch {}
         }
       }
 
       if (loggedInEmail) {
-        setIsLoading(true);
         try {
           const res = await axios.get(
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
-              timeout: 10000
+              timeout: 10000 // ✅ Add timeout for production
             }
           );
           if (res.data?.success && res.data?.student) {
             const s = res.data.student;
             const prefill = {
-              uce: s.uce || loggedInUCE || "",
+              uce: s.uce || s.uce_no || loggedInUCE || "",
               name: s.name || "",
-              dob: s.dob ? s.dob.split('T')[0] : "",
+              dob: s.dob || "",
               gender: s.gender || "",
               bloodGroup: s.bloodGroup || "",
               address: s.address || "",
@@ -128,11 +115,10 @@ function StudentForm() {
           }
         } catch (err) {
           console.error("Prefill fetch error:", err?.response?.data || err.message);
+          // ✅ Handle network errors gracefully in production
           if (err.code === 'ECONNABORTED') {
-            setMessage("⚠️ Connection timeout. Please check your internet connection.");
+            console.error('Request timeout - server may be waking up');
           }
-        } finally {
-          setIsLoading(false);
         }
       }
     };
@@ -141,10 +127,8 @@ function StudentForm() {
 
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === "studentEmail" || e.key === "verifiedEmail" || e.key === "studentUCE") {
+      if (e.key === "studentEmail" || e.key === "verifiedEmail") {
         const newEmail = getLoggedInEmail();
-        const newUCE = getLoggedInUCE();
-        
         if (!newEmail) {
           clearForm();
         } else {
@@ -158,19 +142,16 @@ function StudentForm() {
                   ...INITIAL,
                   ...parsed,
                   email: newEmail,
-                  uce: newUCE || parsed.uce
                 }));
                 if (parsed.profilePhoto) {
                   setPhotoPreview(parsed.profilePhoto);
                 }
-                lastSavedRef.current = JSON.stringify(parsed);
+                lastSavedRef.current = e.newValue;
                 return;
-              } catch (err) {
-                console.error("Storage parse error:", err);
-              }
+              } catch {}
             }
           }
-          setFormData({ ...INITIAL, email: newEmail, uce: newUCE });
+          setFormData({ ...INITIAL, email: newEmail });
           setPhotoPreview("");
           lastSavedRef.current = null;
         }
@@ -183,26 +164,16 @@ function StudentForm() {
 
   const persistDraftAndMaybeSave = (data) => {
     const logged = getLoggedInEmail();
-    const loggedUCE = getLoggedInUCE();
     const activeEmail = logged || data.email;
     const draftKey = getDraftKey(activeEmail);
-    
     if (draftKey) {
-      const toSave = JSON.stringify({ 
-        ...data, 
-        email: activeEmail,
-        uce: loggedUCE || data.uce
-      });
+      const toSave = JSON.stringify({ ...data, email: activeEmail });
       localStorage.setItem(draftKey, toSave);
 
       if (logged && isValidEmail(logged)) {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         saveTimer.current = setTimeout(
-          () => saveToServer({ 
-            ...data, 
-            email: logged,
-            uce: loggedUCE || data.uce
-          }),
+          () => saveToServer({ ...data, email: logged }),
           800
         );
       }
@@ -233,9 +204,6 @@ function StudentForm() {
         setErrors((prev) => ({ ...prev, profilePhoto: "" }));
         persistDraftAndMaybeSave({ ...formData, profilePhoto: base64 });
       };
-      reader.onerror = () => {
-        setErrors((prev) => ({ ...prev, profilePhoto: "❌ Error reading file" }));
-      };
       reader.readAsDataURL(file);
     }
   };
@@ -264,13 +232,9 @@ function StudentForm() {
     try {
       const logged = getLoggedInEmail();
       if (!logged) return;
-      
       await axios.post(`${API_BASE}/api/students`, payload, {
-        headers: { 
-          "x-user-email": logged,
-          "Content-Type": "application/json"
-        },
-        timeout: 10000
+        headers: { "x-user-email": logged },
+        timeout: 10000 // ✅ Add timeout
       });
       lastSavedRef.current = JSON.stringify(payload);
     } catch (err) {
@@ -314,43 +278,34 @@ function StudentForm() {
       return;
     }
 
-    setIsLoading(true);
     try {
       const logged = getLoggedInEmail();
-      const loggedUCE = getLoggedInUCE();
-      
       if (!logged) {
         setMessage("❌ Please login first.");
-        setIsLoading(false);
         return;
       }
-      
-      const submitData = {
-        ...formData,
-        email: logged,
-        uce: loggedUCE || formData.uce
-      };
-      
-      await axios.post(`${API_BASE}/api/students`, submitData, {
-        headers: { 
-          "x-user-email": logged,
-          "Content-Type": "application/json"
-        },
-        timeout: 15000
+      await axios.post(`${API_BASE}/api/students`, formData, {
+        headers: { "x-user-email": logged },
+        timeout: 10000 // ✅ Add timeout
       });
-      
       setMessage("✅ Student details saved successfully!");
       const dk = getDraftKey(logged);
-      if (dk) {
-        localStorage.setItem(dk, JSON.stringify(submitData));
-      }
-      lastSavedRef.current = JSON.stringify(submitData);
+      if (dk)
+        localStorage.setItem(
+          dk,
+          JSON.stringify({ ...formData, email: logged })
+        );
+      lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
     } catch (err) {
-      console.error("Submit error:", err);
-      const errMsg = err?.response?.data?.message || err.message;
-      setMessage(`❌ Error saving student details: ${errMsg}`);
-    } finally {
-      setIsLoading(false);
+      console.error(err);
+      // ✅ Better error messages for production
+      if (err.code === 'ECONNABORTED') {
+        setMessage("❌ Request timeout. Please try again.");
+      } else if (err.response?.status === 500) {
+        setMessage("❌ Server error. Please try again later.");
+      } else {
+        setMessage("❌ Error saving student details.");
+      }
     }
   };
 
@@ -396,8 +351,6 @@ function StudentForm() {
       {message && (
         <p className={message.startsWith("✅") ? "success" : "error"}>{message}</p>
       )}
-
-      {isLoading && <p className="loading">Loading...</p>}
 
       <form onSubmit={handleSubmit}>
         <label htmlFor="uce">UCE<span className="required">*</span></label>
@@ -565,13 +518,9 @@ function StudentForm() {
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save / Update"}
-        </button>
+        <button type="submit">Save / Update</button>
       </form>
     </div>
   );
 }
-
 export default StudentForm;
-
