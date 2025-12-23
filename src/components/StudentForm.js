@@ -1,16 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 //frontend/src/components/StudentForm.js
-// ✅ VERSION WITH EXTENSIVE DEBUG LOGGING
+// ✅ CLEAN VERSION - Use after fixing API URL
 
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../App.css";
 import "./StudentForm.css";
 
+// ✅ MAKE SURE YOUR RENDER BACKEND URL IS SET IN NETLIFY ENVIRONMENT VARIABLES
 const API_BASE = process.env.REACT_APP_API_URL || 
-                 (process.env.NODE_ENV === 'production' 
-                   ? window.location.origin 
-                   : "http://localhost:5000");
+                 "https://student-achievement-portal-backend-2.onrender.com"; // ⚠️ Replace with your actual Render URL
 
 const INITIAL = {
   uce: "",
@@ -37,7 +36,6 @@ function StudentForm() {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const [debugInfo, setDebugInfo] = useState({});
 
   const getLoggedInEmail = () =>
     localStorage.getItem("studentEmail") ||
@@ -49,37 +47,22 @@ function StudentForm() {
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  // ✅ SHOW DEBUG INFO ON SCREEN
-  useEffect(() => {
-    const info = {
-      API_BASE,
-      email: getLoggedInEmail(),
-      uce: getLoggedInUCE(),
-      hasToken: !!localStorage.getItem('token'),
-      allLocalStorageKeys: Object.keys(localStorage)
-    };
-    setDebugInfo(info);
-    console.log("🔍 DEBUG INFO:", info);
-  }, []);
-
+  // Load student data on mount
   useEffect(() => {
     const loadStudentData = async () => {
       const loggedInEmail = getLoggedInEmail();
       const loggedInUCE = getLoggedInUCE();
 
-      console.log("🔄 Initializing form for:", loggedInEmail, "UCE:", loggedInUCE);
+      console.log("🔄 Loading data for:", loggedInEmail);
 
       if (!loggedInEmail) {
-        console.log("⚠️ No logged in email found");
-        alert("⚠️ No email found in localStorage. Please login again.");
+        console.log("⚠️ No email found in localStorage");
         return;
       }
 
       try {
         setIsLoading(true);
-        console.log("🌐 Fetching student data from server...");
-        console.log("📍 URL:", `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`);
-        console.log("🔑 Header x-user-email:", loggedInEmail);
+        console.log("🌐 Fetching from:", `${API_BASE}/api/students/${loggedInEmail}`);
         
         const res = await axios.get(
           `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
@@ -88,8 +71,6 @@ function StudentForm() {
             timeout: 15000
           }
         );
-        
-        console.log("✅ Server response:", res.data);
         
         if (res.data?.success && res.data?.student) {
           const s = res.data.student;
@@ -111,7 +92,7 @@ function StudentForm() {
             profilePhoto: s.profilePhoto || ""
           };
           
-          console.log("📝 Prefilling form with:", prefill);
+          console.log("✅ Data loaded successfully");
           setFormData(prefill);
           
           if (prefill.profilePhoto) {
@@ -121,17 +102,9 @@ function StudentForm() {
           setDataLoaded(true);
         }
       } catch (err) {
-        console.error("❌ Prefill fetch error:", err);
-        console.error("Error details:", {
-          message: err.message,
-          response: err?.response?.data,
-          status: err?.response?.status,
-          code: err.code
-        });
+        console.error("⚠️ Could not fetch existing data:", err.message);
         
-        // Show alert with error details
-        alert(`⚠️ Could not fetch data:\n${err?.response?.data?.message || err.message}\n\nYou can still fill the form manually.`);
-        
+        // Set email and UCE anyway so user can fill the form
         setFormData(prev => ({
           ...prev,
           email: loggedInEmail,
@@ -190,17 +163,6 @@ function StudentForm() {
     
     let newErrors = {};
 
-    // ✅ LOG EVERYTHING BEFORE SUBMIT
-    console.log("==========================================");
-    console.log("🚀 FORM SUBMIT ATTEMPT");
-    console.log("==========================================");
-    console.log("📝 Form Data:", { ...formData, profilePhoto: formData.profilePhoto ? '[BASE64_TRUNCATED]' : 'none' });
-    console.log("📧 Email from localStorage:", getLoggedInEmail());
-    console.log("🎫 UCE from localStorage:", getLoggedInUCE());
-    console.log("🔑 Token exists:", !!localStorage.getItem('token'));
-    console.log("🌐 API Base:", API_BASE);
-    console.log("==========================================");
-
     // Validation
     if (!/^UCE\d{7}$/.test(formData.uce)) {
       newErrors.uce = "❌ UCE must be in format: UCE followed by 7 digits";
@@ -239,30 +201,23 @@ function StudentForm() {
     }
 
     if (Object.keys(newErrors).length > 0) {
-      console.log("❌ Validation failed:", newErrors);
       setErrors(newErrors);
       setIsLoading(false);
-      alert("❌ Please fix validation errors:\n" + Object.values(newErrors).join('\n'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-
-    console.log("✅ Validation passed!");
 
     try {
       const logged = getLoggedInEmail();
       if (!logged) {
-        alert("❌ No email found! Please login again.");
         setMessage("❌ Please login first.");
         setIsLoading(false);
         return;
       }
       
-      const url = `${API_BASE}/api/students`;
-      console.log("📤 POST URL:", url);
-      console.log("📤 Headers:", { "x-user-email": logged });
-      console.log("📤 Sending data...");
+      console.log("🚀 Submitting to:", `${API_BASE}/api/students`);
       
-      const response = await axios.post(url, formData, {
+      const response = await axios.post(`${API_BASE}/api/students`, formData, {
         headers: { 
           "x-user-email": logged,
           "Content-Type": "application/json"
@@ -270,51 +225,36 @@ function StudentForm() {
         timeout: 15000
       });
       
-      console.log("✅ SUCCESS Response:", response.data);
-      
       if (response.data.success) {
         setMessage("✅ Student details saved successfully!");
-        alert("✅ Data saved successfully to MongoDB!");
         
         if (formData.name) {
           localStorage.setItem("studentName", formData.name);
         }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        const errorMsg = response.data.message || "Unknown error";
-        console.error("❌ Server returned success:false -", errorMsg);
-        setMessage("❌ " + errorMsg);
-        alert("❌ Save failed: " + errorMsg);
+        setMessage("❌ " + (response.data.message || "Error saving student details."));
       }
     } catch (err) {
-      console.error("==========================================");
-      console.error("❌ SUBMIT ERROR");
-      console.error("==========================================");
-      console.error("Error object:", err);
-      console.error("Error message:", err.message);
-      console.error("Error code:", err.code);
-      console.error("Response status:", err?.response?.status);
-      console.error("Response data:", err?.response?.data);
-      console.error("Response headers:", err?.response?.headers);
-      console.error("==========================================");
+      console.error("❌ Submit error:", err);
       
-      let errorMsg = "Unknown error occurred";
+      let errorMsg = "Error saving student details.";
       
       if (err.code === 'ECONNABORTED') {
-        errorMsg = "Request timeout. Server not responding.";
+        errorMsg = "Request timeout. Please try again.";
       } else if (err.code === 'ERR_NETWORK') {
-        errorMsg = "Network error. Cannot reach server.";
+        errorMsg = "Network error. Check your connection.";
       } else if (err.response?.status === 404) {
         errorMsg = "Student not found. Please register first.";
       } else if (err.response?.status === 401) {
-        errorMsg = "Unauthorized. Missing x-user-email header.";
-      } else if (err.response?.status === 500) {
-        errorMsg = "Server error: " + (err.response?.data?.message || "Internal error");
+        errorMsg = "Unauthorized. Please login again.";
       } else if (err.response?.data?.message) {
         errorMsg = err.response.data.message;
       }
       
       setMessage("❌ " + errorMsg);
-      alert("❌ ERROR:\n" + errorMsg + "\n\nCheck console for details (F12)");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsLoading(false);
     }
@@ -333,23 +273,6 @@ function StudentForm() {
 
   return (
     <div className="form-container">
-      {/* ✅ DEBUG INFO PANEL */}
-      <div style={{ 
-        background: '#f0f0f0', 
-        padding: '10px', 
-        marginBottom: '20px', 
-        borderRadius: '5px',
-        fontSize: '12px',
-        fontFamily: 'monospace'
-      }}>
-        <strong>🔍 Debug Info:</strong><br/>
-        API: {debugInfo.API_BASE}<br/>
-        Email: {debugInfo.email || '❌ MISSING'}<br/>
-        UCE: {debugInfo.uce || '❌ MISSING'}<br/>
-        Has Token: {debugInfo.hasToken ? '✅' : '❌'}<br/>
-        localStorage keys: {debugInfo.allLocalStorageKeys?.join(', ')}
-      </div>
-
       <div className="form-header">
         <div className="form-title-section">
           <h2>Student Registration Form</h2>
@@ -401,6 +324,7 @@ function StudentForm() {
           onChange={handleChange}
           required
           disabled
+          title="UCE is set during registration"
         />
         {errors.uce && <p className="error">{errors.uce}</p>}
 
@@ -528,6 +452,7 @@ function StudentForm() {
           onChange={handleChange}
           required
           disabled
+          title="Email is set during registration"
         />
 
         <label htmlFor="altEmail">Alternate Email</label>
