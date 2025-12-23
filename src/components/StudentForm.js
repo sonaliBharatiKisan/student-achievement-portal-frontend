@@ -36,6 +36,7 @@ function StudentForm() {
   const saveTimer = useRef(null);
   const lastSavedRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getLoggedInEmail = () =>
     localStorage.getItem("studentEmail") ||
@@ -52,6 +53,8 @@ function StudentForm() {
       const loggedInEmail = getLoggedInEmail();
       const loggedInUCE = localStorage.getItem("studentUCE") || "";
 
+      console.log("🔄 Initializing form for:", loggedInEmail);
+
       if (loggedInEmail && formData.email !== loggedInEmail) {
         setFormData((prev) => ({ 
           ...prev, 
@@ -60,31 +63,40 @@ function StudentForm() {
         }));
       }
 
+      // First, check localStorage for draft
       const draftKey = getDraftKey(loggedInEmail);
       if (draftKey) {
         const raw = localStorage.getItem(draftKey);
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
+            console.log("📦 Loaded draft from localStorage");
             setFormData((prev) => ({ ...prev, ...parsed }));
             if (parsed.profilePhoto) {
               setPhotoPreview(parsed.profilePhoto);
             }
             lastSavedRef.current = JSON.stringify(parsed);
-            return;
-          } catch {}
+            return; // Don't fetch from server if we have a draft
+          } catch (err) {
+            console.error("Error parsing draft:", err);
+          }
         }
       }
 
+      // If no draft, fetch from server
       if (loggedInEmail) {
         try {
+          console.log("🌐 Fetching student data from server...");
           const res = await axios.get(
             `${API_BASE}/api/students/${encodeURIComponent(loggedInEmail)}`,
             { 
               headers: { "x-user-email": loggedInEmail },
-              timeout: 10000 // ✅ Add timeout for production
+              timeout: 10000
             }
           );
+          
+          console.log("✅ Server response:", res.data);
+          
           if (res.data?.success && res.data?.student) {
             const s = res.data.student;
             const prefill = {
@@ -103,10 +115,15 @@ function StudentForm() {
               division: s.division || "",
               profilePhoto: s.profilePhoto || ""
             };
+            
+            console.log("📝 Prefilling form with:", prefill);
             setFormData((prev) => ({ ...prev, ...prefill }));
+            
             if (prefill.profilePhoto) {
               setPhotoPreview(prefill.profilePhoto);
             }
+            
+            // Save to localStorage
             const dk = getDraftKey(prefill.email);
             if (dk) {
               localStorage.setItem(dk, JSON.stringify(prefill));
@@ -114,8 +131,7 @@ function StudentForm() {
             }
           }
         } catch (err) {
-          console.error("Prefill fetch error:", err?.response?.data || err.message);
-          // ✅ Handle network errors gracefully in production
+          console.error("❌ Prefill fetch error:", err?.response?.data || err.message);
           if (err.code === 'ECONNABORTED') {
             console.error('Request timeout - server may be waking up');
           }
@@ -166,10 +182,15 @@ function StudentForm() {
     const logged = getLoggedInEmail();
     const activeEmail = logged || data.email;
     const draftKey = getDraftKey(activeEmail);
+    
     if (draftKey) {
       const toSave = JSON.stringify({ ...data, email: activeEmail });
       localStorage.setItem(draftKey, toSave);
+      console.log("💾 Saved draft to localStorage");
 
+      // ✅ DISABLED AUTO-SAVE - Only save on manual submit
+      // This prevents empty data from being saved automatically
+      /*
       if (logged && isValidEmail(logged)) {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         saveTimer.current = setTimeout(
@@ -177,15 +198,17 @@ function StudentForm() {
           800
         );
       }
+      */
     }
   };
 
   const handleChange = (e) => {
     setMessage("");
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
     setErrors((prev) => ({ ...prev, [name]: "" }));
-    persistDraftAndMaybeSave({ ...formData, [name]: value });
+    persistDraftAndMaybeSave(newFormData);
   };
 
   const handlePhotoChange = (e) => {
@@ -200,9 +223,10 @@ function StudentForm() {
       reader.onloadend = () => {
         const base64 = reader.result;
         setPhotoPreview(base64);
-        setFormData((prev) => ({ ...prev, profilePhoto: base64 }));
+        const newFormData = { ...formData, profilePhoto: base64 };
+        setFormData(newFormData);
         setErrors((prev) => ({ ...prev, profilePhoto: "" }));
-        persistDraftAndMaybeSave({ ...formData, profilePhoto: base64 });
+        persistDraftAndMaybeSave(newFormData);
       };
       reader.readAsDataURL(file);
     }
@@ -210,11 +234,12 @@ function StudentForm() {
 
   const handleRemovePhoto = () => {
     setPhotoPreview("");
-    setFormData((prev) => ({ ...prev, profilePhoto: "" }));
+    const newFormData = { ...formData, profilePhoto: "" };
+    setFormData(newFormData);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    persistDraftAndMaybeSave({ ...formData, profilePhoto: "" });
+    persistDraftAndMaybeSave(newFormData);
   };
 
   const clearForm = () => {
@@ -232,19 +257,31 @@ function StudentForm() {
     try {
       const logged = getLoggedInEmail();
       if (!logged) return;
-      await axios.post(`${API_BASE}/api/students`, payload, {
+      
+      console.log("💾 Saving to server:", payload);
+      
+      const response = await axios.post(`${API_BASE}/api/students`, payload, {
         headers: { "x-user-email": logged },
-        timeout: 10000 // ✅ Add timeout
+        timeout: 10000
       });
+      
+      console.log("✅ Save response:", response.data);
       lastSavedRef.current = JSON.stringify(payload);
+      return response;
     } catch (err) {
-      console.error("Auto-save error:", err?.response?.data || err.message);
+      console.error("❌ Auto-save error:", err?.response?.data || err.message);
+      throw err;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setMessage("");
+    
     let newErrors = {};
+
+    console.log("📝 Form data being submitted:", formData);
 
     if (!/^UCE\d{7}$/.test(formData.uce)) {
       newErrors.uce = "❌ UCE must be in format: UCE followed by 7 digits (e.g., UCE1234567).";
@@ -275,6 +312,7 @@ function StudentForm() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setIsLoading(false);
       return;
     }
 
@@ -282,30 +320,49 @@ function StudentForm() {
       const logged = getLoggedInEmail();
       if (!logged) {
         setMessage("❌ Please login first.");
+        setIsLoading(false);
         return;
       }
-      await axios.post(`${API_BASE}/api/students`, formData, {
-        headers: { "x-user-email": logged },
-        timeout: 10000 // ✅ Add timeout
+      
+      console.log("🚀 Submitting form data to server...");
+      console.log("Email:", logged);
+      console.log("Form data:", formData);
+      
+      const response = await axios.post(`${API_BASE}/api/students`, formData, {
+        headers: { 
+          "x-user-email": logged,
+          "Content-Type": "application/json"
+        },
+        timeout: 15000
       });
-      setMessage("✅ Student details saved successfully!");
-      const dk = getDraftKey(logged);
-      if (dk)
-        localStorage.setItem(
-          dk,
-          JSON.stringify({ ...formData, email: logged })
-        );
-      lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
+      
+      console.log("✅ Server response:", response.data);
+      
+      if (response.data.success) {
+        setMessage("✅ Student details saved successfully!");
+        const dk = getDraftKey(logged);
+        if (dk) {
+          localStorage.setItem(dk, JSON.stringify({ ...formData, email: logged }));
+        }
+        lastSavedRef.current = JSON.stringify({ ...formData, email: logged });
+      } else {
+        setMessage("❌ " + (response.data.message || "Error saving student details."));
+      }
     } catch (err) {
-      console.error(err);
-      // ✅ Better error messages for production
+      console.error("❌ Submit error:", err);
+      console.error("Response data:", err?.response?.data);
+      
       if (err.code === 'ECONNABORTED') {
         setMessage("❌ Request timeout. Please try again.");
       } else if (err.response?.status === 500) {
         setMessage("❌ Server error. Please try again later.");
+      } else if (err.response?.data?.message) {
+        setMessage("❌ " + err.response.data.message);
       } else {
         setMessage("❌ Error saving student details.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -518,7 +575,9 @@ function StudentForm() {
         />
         {errors.altEmail && <p className="error">{errors.altEmail}</p>}
 
-        <button type="submit">Save / Update</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save / Update"}
+        </button>
       </form>
     </div>
   );
