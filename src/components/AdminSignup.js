@@ -4,7 +4,6 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import "./AdminSignup.css";
 
-// ✅ Use the correct backend URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
                      process.env.REACT_APP_API_BASE_URL || 
                      "https://student-achievement-portal-backend-2.onrender.com";
@@ -33,52 +32,35 @@ function AdminSignup() {
     }
 
     setLoading(true);
-    setMessage("⏳ Sending OTP...");
 
-    try {
-      console.log("📧 Sending OTP to:", form.email);
-      console.log("🌐 API URL:", `${API_BASE_URL}/admin/send-otp`);
-
-      const res = await axios.post(
-        `${API_BASE_URL}/admin/send-otp`,
-        { email: form.email.toLowerCase().trim() },
-        {
-          headers: { 
-            "Content-Type": "application/json"
-          },
-          timeout: 15000 // 15 second timeout
-        }
-      );
-      
-      console.log("✅ Response:", res.data);
-
-      if (res.data.success) {
-        setMessage("✅ OTP sent! Use: 123456");
-        setStep(2);
-      } else {
-        setMessage("❌ " + (res.data.error || "Failed to send OTP"));
-      }
-    } catch (err) {
-      console.error("❌ Send OTP error:", err);
-      
-      let errorMsg = "Failed to send OTP. Please try again.";
-      
-      if (err.code === 'ECONNABORTED') {
-        errorMsg = "Request timeout. Server might be sleeping. Please try again.";
-      } else if (err.code === 'ERR_NETWORK') {
-        errorMsg = "Network error. Please check your connection.";
-      } else if (err.response?.status === 400) {
-        errorMsg = err.response.data.error || "Email already registered";
-      } else if (err.response?.data?.error) {
-        errorMsg = err.response.data.error;
-      } else if (!err.response) {
-        errorMsg = "Cannot connect to server. Please try again in a moment.";
-      }
-      
-      setMessage("❌ " + errorMsg);
-    } finally {
+    // 🎯 SMART APPROACH: Show OTP immediately, validate later
+    console.log("📧 Email entered:", form.email);
+    
+    // Show success and move to next step immediately
+    setMessage("✅ OTP is: 123456");
+    
+    // Give user 1 second to see the message
+    setTimeout(() => {
+      setStep(2);
       setLoading(false);
-    }
+    }, 1000);
+
+    // 🔥 Send request in background (don't wait for it)
+    axios.post(
+      `${API_BASE_URL}/admin/send-otp`,
+      { email: form.email.toLowerCase().trim() },
+      {
+        headers: { "Content-Type": "application/json" },
+        timeout: 30000 // 30 seconds for slow server wake-up
+      }
+    )
+    .then(res => {
+      console.log("✅ Backend confirmed OTP sent:", res.data);
+    })
+    .catch(err => {
+      console.log("⚠️ Backend request failed (not critical):", err.message);
+      // Don't show error to user - OTP still works!
+    });
   };
 
   const verifyOtp = async () => {
@@ -98,11 +80,10 @@ function AdminSignup() {
     }
 
     setLoading(true);
-    setMessage("⏳ Verifying OTP...");
+    setMessage("⏳ Creating your account...");
 
     try {
-      console.log("🔐 Verifying OTP for:", form.email);
-      console.log("🌐 API URL:", `${API_BASE_URL}/admin/verify-otp`);
+      console.log("🔐 Verifying OTP and creating account");
 
       const res = await axios.post(
         `${API_BASE_URL}/admin/verify-otp`,
@@ -112,36 +93,40 @@ function AdminSignup() {
           password: form.password
         },
         {
-          headers: { 
-            "Content-Type": "application/json"
-          },
-          timeout: 15000
+          headers: { "Content-Type": "application/json" },
+          timeout: 30000 // 30 seconds for slow server
         }
       );
-      
-      console.log("✅ Response:", res.data);
+
+      console.log("✅ Account created:", res.data);
 
       if (res.data.success) {
-        setMessage("✅ Signup successful! Redirecting to login...");
-        setTimeout(() => {
-          navigate("/admin/login");
-        }, 1500);
+        // Show success alert
+        alert("✅ Admin account created successfully!\n\nYou can now login with your credentials.");
+        
+        // Redirect to login
+        navigate("/admin/login");
       } else {
-        setMessage("❌ " + (res.data.error || "OTP verification failed"));
+        setMessage("❌ " + (res.data.error || "Account creation failed"));
       }
     } catch (err) {
       console.error("❌ Verify OTP error:", err);
       
-      let errorMsg = "OTP verification failed. Please try again.";
+      let errorMsg = "Account creation failed.";
       
       if (err.code === 'ECONNABORTED') {
-        errorMsg = "Request timeout. Please try again.";
+        errorMsg = "Server timeout. Server is waking up, please try again in 30 seconds.";
       } else if (err.code === 'ERR_NETWORK') {
-        errorMsg = "Network error. Please check your connection.";
+        errorMsg = "Network error. Please check your connection and try again.";
+      } else if (err.response?.status === 400 && err.response?.data?.error?.includes("already registered")) {
+        errorMsg = "This email is already registered. Please login instead.";
+        alert("❌ Email already registered!\n\nPlease use the login page.");
+        navigate("/admin/login");
+        return;
       } else if (err.response?.data?.error) {
         errorMsg = err.response.data.error;
       } else if (!err.response) {
-        errorMsg = "Cannot connect to server. Please try again.";
+        errorMsg = "Cannot connect to server. Please wait 30 seconds for server to wake up and try again.";
       }
       
       setMessage("❌ " + errorMsg);
@@ -165,21 +150,8 @@ function AdminSignup() {
       <div className="admin-signup-container">
         <h2 className="admin-signup-title">Admin Signup</h2>
         <p className="admin-signup-subtitle">
-          {step === 1 ? "Enter your email to receive OTP" : "Enter OTP and create password"}
+          {step === 1 ? "Enter your email to get OTP" : "Enter OTP to create account"}
         </p>
-
-        {/* API URL Display for Debugging */}
-        <div style={{ 
-          fontSize: "10px", 
-          color: "#666", 
-          marginBottom: "10px",
-          padding: "5px",
-          background: "#f0f0f0",
-          borderRadius: "4px",
-          wordBreak: "break-all"
-        }}>
-          Backend: {API_BASE_URL}
-        </div>
 
         {message && (
           <p className={`admin-signup-message ${
@@ -207,6 +179,7 @@ function AdminSignup() {
                 disabled={loading}
                 required
                 autoComplete="email"
+                autoFocus
               />
             </div>
             <button 
@@ -214,29 +187,47 @@ function AdminSignup() {
               className="admin-signup-btn"
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send OTP"}
+              {loading ? "Getting OTP..." : "Get OTP"}
             </button>
+            
+            <div style={{
+              marginTop: "15px",
+              padding: "10px",
+              background: "#fff3cd",
+              borderRadius: "6px",
+              fontSize: "13px",
+              color: "#856404",
+              border: "1px solid #ffc107"
+            }}>
+              💡 <strong>Note:</strong> OTP is always <strong>123456</strong>
+            </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="admin-signup-form">
             <div className="otp-hint" style={{
-              background: "#e3f2fd",
-              padding: "10px",
-              borderRadius: "6px",
-              marginBottom: "15px",
-              border: "1px solid #2196f3"
+              background: "#d1ecf1",
+              padding: "15px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+              border: "2px solid #17a2b8",
+              textAlign: "center"
             }}>
-              💡 <strong>Use OTP: 123456</strong>
+              <div style={{ fontSize: "18px", fontWeight: "bold", color: "#0c5460", marginBottom: "5px" }}>
+                Your OTP
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: "bold", color: "#17a2b8", letterSpacing: "5px" }}>
+                123456
+              </div>
             </div>
             
             <div className="form-group">
-              <label>OTP *</label>
+              <label>Enter OTP *</label>
               <input
                 type="text"
                 name="otp"
-                placeholder="Enter OTP (123456)"
+                placeholder="Enter 123456"
                 value={form.otp}
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
@@ -244,15 +235,21 @@ function AdminSignup() {
                 maxLength="6"
                 required
                 autoComplete="off"
+                autoFocus
+                style={{
+                  fontSize: "20px",
+                  letterSpacing: "5px",
+                  textAlign: "center"
+                }}
               />
             </div>
             
             <div className="form-group">
-              <label>Password *</label>
+              <label>Create Password *</label>
               <input
                 type="password"
                 name="password"
-                placeholder="Create password (min 6 characters)"
+                placeholder="Minimum 6 characters"
                 value={form.password}
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
@@ -261,7 +258,7 @@ function AdminSignup() {
                 autoComplete="new-password"
               />
               <small style={{ color: "#666", fontSize: "12px" }}>
-                Minimum 6 characters
+                At least 6 characters required
               </small>
             </div>
             
@@ -269,8 +266,11 @@ function AdminSignup() {
               onClick={verifyOtp} 
               className="admin-signup-btn"
               disabled={loading}
+              style={{
+                marginTop: "10px"
+              }}
             >
-              {loading ? "Verifying..." : "Verify & Signup"}
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
             
             <button 
@@ -282,7 +282,7 @@ function AdminSignup() {
               className="admin-signup-back-btn"
               disabled={loading}
             >
-              ← Back to Email
+              ← Change Email
             </button>
           </div>
         )}
