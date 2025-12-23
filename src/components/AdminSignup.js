@@ -25,7 +25,7 @@ function AdminSignup() {
     setMessage("");
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/admin/send-otp`, {
+      const res = await axios.post(`${API_BASE_URL}/api/admin/send-otp`, {
         email: form.email.toLowerCase(), // ✅ Ensure lowercase
       });
       
