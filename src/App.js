@@ -1,6 +1,5 @@
 //frontend/src/App.js
 import AICheck from "./components/AICHECK";
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import Signup from "./pages/Signup";
 import OtpReset from "./pages/OtpReset";
@@ -19,10 +18,10 @@ import StudentDetails from "./components/StudentDetails";
 import AdminReportGenerator from "./components/AdminReportGenerator";
 import FullReport from "./components/FullReport";
 import Leaderboard from "./pages/Leaderboard";
-import StudentStats from "./pages/StudentStats"; // ✅ NEW IMPORT
-// ✅ REMOVED - AchievementStats import (moved to admin only)
-// ✅ Session Manager
-import SessionManager from "./components/SessionManager";
+import StudentStats from "./pages/StudentStats";
+
+// ✅ TEMPORARILY COMMENTED OUT FOR DEBUGGING
+// import SessionManager from "./components/SessionManager";
 
 import "./App.css";
 
@@ -39,57 +38,54 @@ function AppWrapper() {
     location.pathname.startsWith("/admin");
 
   return (
-    <SessionManager>
-      <div style={{ display: "flex" }}>
-        {/* Sidebar (hidden on auth pages & Home & admin pages) */}
-        {!hideSidebar && <Sidebar />}
+    // ✅ TEMPORARILY REMOVED SessionManager WRAPPER FOR DEBUGGING
+    // <SessionManager>
+    <div style={{ display: "flex" }}>
+      {/* Sidebar (hidden on auth pages & Home & admin pages) */}
+      {!hideSidebar && <Sidebar />}
 
-        {/* Main content area */}
-        <div
-          style={{
-            marginLeft: !hideSidebar ? "250px" : "0",
-            flex: 1,
-            padding: !hideSidebar ? "20px" : "0",
-            minHeight: "100vh",
-            background: !hideSidebar ? "#f9fafb" : "#ffffff",
-          }}
-        >
-          <Routes>
-            {/* Home page */}
-            <Route path="/" element={<Home />} />
+      {/* Main content area */}
+      <div
+        style={{
+          marginLeft: !hideSidebar ? "250px" : "0",
+          flex: 1,
+          padding: !hideSidebar ? "20px" : "0",
+          minHeight: "100vh",
+          background: !hideSidebar ? "#f9fafb" : "#ffffff",
+        }}
+      >
+        <Routes>
+          {/* Home page */}
+          <Route path="/" element={<Home />} />
 
-            {/* Student Auth Pages */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/otp-reset" element={<OtpReset />} />
+          {/* Student Auth Pages */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/otp-reset" element={<OtpReset />} />
 
-            {/* Student Dashboard */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/academic" element={<AcademicData />} />
-            <Route path="/leaderboard" element={<Leaderboard/>}/>
-            
-            {/* ✅ NEW - Student Stats Route */}
-            <Route path="/student-stats" element={<StudentStats />} />
-            
-            {/* ✅ REMOVED - Achievement Stats Route (now admin only) */}
+          {/* Student Dashboard */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/academic" element={<AcademicData />} />
+          <Route path="/leaderboard" element={<Leaderboard/>}/>
+          <Route path="/student-stats" element={<StudentStats />} />
 
-            {/* Admin Pages */}
-            <Route path="/admin/signup" element={<AdminSignup />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
-            <Route path="/admin/otp-reset" element={<OtpReset />} />
-            <Route path="/admin/student-details" element={<StudentDetails />} />
-            <Route path="/admin/report" element={<AdminReportGenerator />} />
-            <Route path="/admin/full-report" element={<FullReport />} />
-            <Route path="/admin/ai-check" element={<AICheck />} />
-          </Routes>
-        </div>
+          {/* Admin Pages */}
+          <Route path="/admin/signup" element={<AdminSignup />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+          <Route path="/admin/otp-reset" element={<OtpReset />} />
+          <Route path="/admin/student-details" element={<StudentDetails />} />
+          <Route path="/admin/report" element={<AdminReportGenerator />} />
+          <Route path="/admin/full-report" element={<FullReport />} />
+          <Route path="/admin/ai-check" element={<AICheck />} />
+        </Routes>
       </div>
-    </SessionManager>
+    </div>
+    // </SessionManager>
   );
 }
 

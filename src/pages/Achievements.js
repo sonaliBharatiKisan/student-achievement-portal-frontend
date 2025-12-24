@@ -1,36 +1,84 @@
 // frontend/src/pages/Achievements.js
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AchievementForm from "../components/AchievementForm";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Achievements() {
+  const navigate = useNavigate();
   const [achievements, setAchievements] = useState([]);
   const [visibleCounts, setVisibleCounts] = useState({});
   const [editingAchievement, setEditingAchievement] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const email =
+  // ✅ Get email once and store it
+  const email = 
     localStorage.getItem("studentEmail") ||
     localStorage.getItem("email") ||
     JSON.parse(localStorage.getItem("user") || "{}")?.email ||
     "guest@example.com";
 
-  const fetchAchievements = async () => {
+  // ✅ Check authentication on mount
+  useEffect(() => {
+    console.log("🔍 Achievements page mounted");
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.log("❌ No token found, redirecting to login");
+      navigate("/login", { replace: true });
+      return;
+    }
+    
+    console.log("✅ Token found:", token.substring(0, 20) + "...");
+    console.log("📧 Email:", email);
+  }, [navigate, email]);
+
+  // ✅ Fetch achievements with useCallback to prevent re-creation
+  const fetchAchievements = useCallback(async () => {
+    if (email === "guest@example.com") {
+      console.warn("⚠️ Guest email detected, skipping fetch");
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log(`📡 Fetching achievements for: ${email}`);
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${API_BASE_URL}/api/achievements/${email}`
+        `${API_BASE_URL}/api/achievements/${email}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
       );
+      
+      console.log(`✅ Fetched ${res.data?.length || 0} achievements`);
       setAchievements(res.data || []);
     } catch (err) {
-      console.error("Fetch Error:", err);
-      setAchievements([]);
+      console.error("❌ Fetch Error:", err);
+      
+      if (err.response?.status === 401) {
+        console.log("🔒 Unauthorized - redirecting to login");
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      } else {
+        setError(err.response?.data?.message || "Failed to load achievements");
+        setAchievements([]);
+      }
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [email, navigate]);
 
+  // ✅ Fetch on mount
   useEffect(() => {
     fetchAchievements();
-  }, []);
+  }, [fetchAchievements]);
 
   // ✅ Delete Achievement
   const handleDelete = async (achievementId) => {
@@ -49,25 +97,27 @@ function Achievements() {
 
       if (res.status === 200) {
         alert("Achievement deleted successfully!");
-        fetchAchievements(); // Refresh list
+        fetchAchievements();
       }
     } catch (err) {
       console.error("Delete Error:", err);
-      alert("Failed to delete achievement");
+      alert(err.response?.data?.message || "Failed to delete achievement");
     }
   };
 
   // ✅ Edit Achievement
   const handleEdit = (achievement) => {
+    console.log("✏️ Editing achievement:", achievement._id);
     setEditingAchievement(achievement);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
+    console.log("❌ Cancelled editing");
     setEditingAchievement(null);
   };
 
-  // ---------- helpers ----------
+  // ---------- Helper Functions ----------
   const renderEventName = (ach) => {
     if (ach.eventName) return ach.eventName;
     if (ach.workshopName) return ach.workshopName;
@@ -80,14 +130,7 @@ function Achievements() {
   };
 
   const renderDate = (ach) => {
-    console.group(`📅 Rendering date for: ${renderEventName(ach)}`);
-    console.log("Date Selection:", ach.dateSelection);
-    console.log("Event Date:", ach.eventDate);
-    console.log("Event From:", ach.eventFrom);
-    console.log("Event To:", ach.eventTo);
-    console.groupEnd();
-
-    // ✅ Check for date range
+    // Date range
     if (ach.dateSelection === "range") {
       if (ach.eventFrom && ach.eventTo) {
         const fromDate = new Date(ach.eventFrom).toLocaleDateString();
@@ -96,30 +139,35 @@ function Achievements() {
       }
     }
 
-    // ✅ Check for single date
+    // Single date
     if (ach.dateSelection === "single" && ach.eventDate) {
       return new Date(ach.eventDate).toLocaleDateString();
     }
 
-    // ✅ Fallback for legacy records
+    // Fallback for legacy records
     if (ach.eventDate) {
       return new Date(ach.eventDate).toLocaleDateString();
     }
 
-    if (ach.publicationDate)
+    if (ach.publicationDate) {
       return new Date(ach.publicationDate).toLocaleDateString();
+    }
 
     if (ach.startMonth && ach.startYear && ach.endMonth && ach.endYear) {
       return `${ach.startMonth} ${ach.startYear} - ${ach.endMonth} ${ach.endYear}`;
     }
+    
     if (ach.startMonth && ach.startYear) {
       return `${ach.startMonth} ${ach.startYear} - Present`;
     }
 
-    if (ach.awardMonth && ach.awardYear)
+    if (ach.awardMonth && ach.awardYear) {
       return `${ach.awardMonth} ${ach.awardYear}`;
-    if (ach.awardStartYear)
+    }
+    
+    if (ach.awardStartYear) {
       return `${ach.awardStartYear} - ${ach.awardEndYear || "Present"}`;
+    }
 
     return "-";
   };
@@ -146,8 +194,9 @@ function Achievements() {
     if (ach.amount) info.push(`Amount: ${ach.amount}`);
     if (ach.indexing) info.push(`Indexing: ${ach.indexing}`);
     if (ach.publicationType) info.push(`Type: ${ach.publicationType}`);
-    if (ach.authors && ach.authors.length > 0)
+    if (ach.authors && ach.authors.length > 0) {
       info.push(`Authors: ${ach.authors.join(", ")}`);
+    }
     return info.length > 0 ? info.join(" | ") : "-";
   };
 
@@ -212,7 +261,6 @@ function Achievements() {
       <td key="date">{renderDate(ach)}</td>,
     ];
 
-    // ✅ Action buttons column
     const actionColumn = (
       <td key="actions">
         <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
@@ -310,13 +358,32 @@ function Achievements() {
     }));
   };
 
+  // ✅ Loading state
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "50px" }}>
+        <h2>Loading achievements...</h2>
+      </div>
+    );
+  }
+
+  // ✅ Error state
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", padding: "50px", color: "red" }}>
+        <h2>Error: {error}</h2>
+        <button onClick={fetchAchievements}>Retry</button>
+      </div>
+    );
+  }
+
   return (
     <div className="achievements-page">
       <h2 style={{ textAlign: "center", marginTop: 20, marginBottom: 20 }}>
         Student Achievements
       </h2>
 
-      {/* ✅ Pass editing state to form */}
+      {/* Achievement Form */}
       <AchievementForm
         onSuccess={() => {
           fetchAchievements();
@@ -326,6 +393,7 @@ function Achievements() {
         onCancelEdit={handleCancelEdit}
       />
 
+      {/* Achievements List */}
       {Object.keys(groupedAchievements).length > 0 ? (
         <div>
           {Object.entries(groupedAchievements).map(([type, typeAchievements]) => {
@@ -366,9 +434,7 @@ function Achievements() {
                     {visibleCount < typeAchievements.length && (
                       <button
                         className="see-more-btn"
-                        onClick={() =>
-                          handleSeeMore(type, typeAchievements.length)
-                        }
+                        onClick={() => handleSeeMore(type, typeAchievements.length)}
                         style={{
                           border: "none",
                           background: "none",
