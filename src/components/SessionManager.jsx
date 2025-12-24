@@ -54,6 +54,10 @@ const SessionManager = ({ children }) => {
     localStorage.removeItem('uce_no');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminEmail');
+    
+    // ✅ Clear session storage on logout
+    sessionStorage.removeItem('lastActivityTime');
+    sessionStorage.removeItem('lastActivePath');
 
     setShowModal(false);
     setIsWarning(false);
@@ -81,7 +85,7 @@ const SessionManager = ({ children }) => {
 
     console.log("⏳ Session timer reset at:", new Date().toLocaleTimeString());
 
-    //  Show warning before session expires
+    // Show warning before session expires
     warningRef.current = setTimeout(() => {
       setIsWarning(true);
       setCountdown(30);
@@ -98,10 +102,22 @@ const SessionManager = ({ children }) => {
     }, SESSION_TIMEOUT);
   }, [isPublicPage, isLoggedIn, clearAllTimers, saveSessionInfo, SESSION_TIMEOUT, WARNING_TIME]);
 
-  //  Initial load session check
+  // ✅ FIXED: Initial load session check
   useEffect(() => {
-    if (isPublicPage || !isLoggedIn()) return;
+    if (isPublicPage) return;
+    
+    // ✅ If not logged in, redirect immediately
+    if (!isLoggedIn()) {
+      const userType = getUserType();
+      if (userType === 'admin') {
+        navigate('/admin/login', { replace: true });
+      } else {
+        navigate('/login', { replace: true });
+      }
+      return;
+    }
 
+    // ✅ Check last activity only if it exists
     const lastActivity = sessionStorage.getItem('lastActivityTime');
     if (lastActivity) {
       const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
@@ -110,11 +126,17 @@ const SessionManager = ({ children }) => {
         setShowModal(true);
         return;
       }
+    } else {
+      // ✅ No last activity? Set it now (fresh session)
+      console.log("🆕 Fresh session - initializing activity tracking");
+      sessionStorage.setItem('lastActivityTime', Date.now().toString());
     }
+    
+    // Start the timer
     resetTimer();
-  }, [isPublicPage, isLoggedIn, resetTimer, SESSION_TIMEOUT]);
+  }, [isPublicPage, isLoggedIn, resetTimer, SESSION_TIMEOUT, navigate, getUserType]);
 
-  //  Activity Tracker
+  // Activity Tracker
   useEffect(() => {
     if (isPublicPage || !isLoggedIn()) return;
 
@@ -135,18 +157,25 @@ const SessionManager = ({ children }) => {
     };
   }, [isPublicPage, isLoggedIn, resetTimer, clearAllTimers]);
 
-  //  Visibility handler
+  // Visibility handler
   useEffect(() => {
     if (isPublicPage || !isLoggedIn()) return;
 
     const handleVisibilityChange = () => {
-      if (document.hidden) saveSessionInfo();
-      else {
+      if (document.hidden) {
+        saveSessionInfo();
+      } else {
         const lastActivity = sessionStorage.getItem('lastActivityTime');
         if (lastActivity) {
           const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
-          if (timeSinceLastActivity > SESSION_TIMEOUT) setShowModal(true);
-          else resetTimer();
+          if (timeSinceLastActivity > SESSION_TIMEOUT) {
+            setShowModal(true);
+          } else {
+            resetTimer();
+          }
+        } else {
+          // ✅ No activity recorded? Start fresh
+          resetTimer();
         }
       }
     };
@@ -175,7 +204,7 @@ const SessionManager = ({ children }) => {
       {isWarning && !showModal && (
         <div className="session-warning-overlay">
           <div className="session-warning-modal">
-            <div className="warning-icon"></div>
+            <div className="warning-icon">⚠️</div>
             <h2>Session Expiring Soon!</h2>
             <p>Your session will expire in <strong>{countdown} seconds</strong></p>
             <p className="warning-subtext">Click "Continue" to stay logged in</p>
@@ -200,7 +229,7 @@ const SessionManager = ({ children }) => {
             <p>Your session has expired due to inactivity.</p>
             <p className="sub-text">Please login again to continue.</p>
             <button className="login-btn" onClick={handleLoginAgain}>
-               Login Again
+              🔐 Login Again
             </button>
           </div>
         </div>
