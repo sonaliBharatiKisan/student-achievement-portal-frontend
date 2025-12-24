@@ -1,4 +1,4 @@
-// frontend/src/pages/Achievements.js
+// frontend/src/pages/Achievements.js - FIXED VERSION
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -13,33 +13,39 @@ function Achievements() {
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // ✅ Get email once and store it
-  const email = 
-    localStorage.getItem("studentEmail") ||
-    localStorage.getItem("email") ||
-    JSON.parse(localStorage.getItem("user") || "{}")?.email ||
-    "guest@example.com";
+  // ✅ Get email from localStorage
+  const getEmail = () => {
+    return localStorage.getItem("studentEmail") ||
+      localStorage.getItem("email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email ||
+      null;
+  };
 
-  // ✅ Check authentication on mount
+  // ✅ STEP 1: Check authentication FIRST
   useEffect(() => {
-    console.log("🔍 Achievements page mounted");
     const token = localStorage.getItem("token");
+    const email = getEmail();
     
-    if (!token) {
-      console.log("❌ No token found, redirecting to login");
+    console.log("🔍 Auth Check:", { token: !!token, email });
+    
+    if (!token || !email) {
+      console.log("❌ Missing credentials, redirecting to login");
       navigate("/login", { replace: true });
       return;
     }
     
-    console.log("✅ Token found:", token.substring(0, 20) + "...");
-    console.log("📧 Email:", email);
-  }, [navigate, email]);
+    console.log("✅ Authentication confirmed");
+    setIsAuthenticated(true);
+  }, [navigate]);
 
-  // ✅ Fetch achievements with useCallback to prevent re-creation
+  // ✅ STEP 2: Fetch achievements ONLY after authentication is confirmed
   const fetchAchievements = useCallback(async () => {
-    if (email === "guest@example.com") {
-      console.warn("⚠️ Guest email detected, skipping fetch");
+    const email = getEmail();
+    
+    if (!email) {
+      console.warn("⚠️ No email found, skipping fetch");
       setLoading(false);
       return;
     }
@@ -50,35 +56,53 @@ function Achievements() {
       setError(null);
       
       const token = localStorage.getItem("token");
+      
+      if (!token) {
+        console.log("❌ No token during fetch, redirecting");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const res = await axios.get(
         `${API_BASE_URL}/api/achievements/${email}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000 // 15 second timeout
         }
       );
       
       console.log(`✅ Fetched ${res.data?.length || 0} achievements`);
-      setAchievements(res.data || []);
+      setAchievements(Array.isArray(res.data) ? res.data : []);
+      
     } catch (err) {
       console.error("❌ Fetch Error:", err);
       
       if (err.response?.status === 401) {
-        console.log("🔒 Unauthorized - redirecting to login");
+        console.log("🔒 Unauthorized - clearing storage and redirecting");
         localStorage.clear();
+        sessionStorage.clear();
         navigate("/login", { replace: true });
+      } else if (err.code === 'ECONNABORTED') {
+        setError("Request timeout. Please check your connection.");
       } else {
-        setError(err.response?.data?.message || "Failed to load achievements");
-        setAchievements([]);
+        setError(err.response?.data?.message || err.message || "Failed to load achievements");
       }
+      setAchievements([]);
     } finally {
       setLoading(false);
     }
-  }, [email, navigate]);
+  }, [navigate]);
 
-  // ✅ Fetch on mount
+  // ✅ STEP 3: Fetch data only when authenticated
   useEffect(() => {
-    fetchAchievements();
-  }, [fetchAchievements]);
+    if (isAuthenticated) {
+      console.log("🚀 Starting data fetch...");
+      fetchAchievements();
+    }
+  }, [isAuthenticated, fetchAchievements]);
 
   // ✅ Delete Achievement
   const handleDelete = async (achievementId) => {
@@ -88,6 +112,12 @@ function Achievements() {
 
     try {
       const token = localStorage.getItem("token");
+      
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const res = await axios.delete(
         `${API_BASE_URL}/api/achievements/${achievementId}`,
         {
@@ -101,7 +131,11 @@ function Achievements() {
       }
     } catch (err) {
       console.error("Delete Error:", err);
-      alert(err.response?.data?.message || "Failed to delete achievement");
+      if (err.response?.status === 401) {
+        navigate("/login", { replace: true });
+      } else {
+        alert(err.response?.data?.message || "Failed to delete achievement");
+      }
     }
   };
 
@@ -115,6 +149,13 @@ function Achievements() {
   const handleCancelEdit = () => {
     console.log("❌ Cancelled editing");
     setEditingAchievement(null);
+  };
+
+  // ✅ Handle form success
+  const handleFormSuccess = () => {
+    console.log("✅ Form submitted successfully");
+    setEditingAchievement(null);
+    fetchAchievements();
   };
 
   // ---------- Helper Functions ----------
@@ -358,11 +399,34 @@ function Achievements() {
     }));
   };
 
-  // ✅ Loading state
+  // ✅ Show loading only when actually loading (not during auth check)
+  if (!isAuthenticated) {
+    return (
+      <div style={{ textAlign: "center", padding: "50px" }}>
+        <h2>Checking authentication...</h2>
+      </div>
+    );
+  }
+
+  // ✅ Loading state (after auth is confirmed)
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
-        <h2>Loading achievements...</h2>
+        <div style={{ marginBottom: "20px" }}>
+          <div className="spinner" style={{
+            border: "4px solid #f3f3f3",
+            borderTop: "4px solid #3498db",
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            animation: "spin 1s linear infinite",
+            margin: "0 auto"
+          }}></div>
+        </div>
+        <h2>Loading your achievements...</h2>
+        <p style={{ color: "#666", fontSize: "14px", marginTop: "10px" }}>
+          This may take a moment
+        </p>
       </div>
     );
   }
@@ -371,8 +435,22 @@ function Achievements() {
   if (error) {
     return (
       <div style={{ textAlign: "center", padding: "50px", color: "red" }}>
-        <h2>Error: {error}</h2>
-        <button onClick={fetchAchievements}>Retry</button>
+        <h2>⚠ Error Loading Achievements</h2>
+        <p style={{ marginBottom: "20px" }}>{error}</p>
+        <button 
+          onClick={fetchAchievements}
+          style={{
+            padding: "10px 20px",
+            background: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "16px"
+          }}
+        >
+          🔄 Retry
+        </button>
       </div>
     );
   }
@@ -385,10 +463,7 @@ function Achievements() {
 
       {/* Achievement Form */}
       <AchievementForm
-        onSuccess={() => {
-          fetchAchievements();
-          setEditingAchievement(null);
-        }}
+        onSuccess={handleFormSuccess}
         editingAchievement={editingAchievement}
         onCancelEdit={handleCancelEdit}
       />
@@ -469,9 +544,15 @@ function Achievements() {
           })}
         </div>
       ) : (
-        <div className="empty-state">
-          <p>No achievements found for email: {email}</p>
-          <p>Add your first achievement using the form above!</p>
+        <div className="empty-state" style={{
+          textAlign: "center",
+          padding: "40px",
+          background: "#f8f9fa",
+          borderRadius: "8px",
+          marginTop: "20px"
+        }}>
+          <h3 style={{ color: "#666", marginBottom: "10px" }}>No Achievements Yet</h3>
+          <p style={{ color: "#999" }}>Add your first achievement using the form above!</p>
         </div>
       )}
     </div>
@@ -479,3 +560,4 @@ function Achievements() {
 }
 
 export default Achievements;
+
