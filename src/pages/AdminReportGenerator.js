@@ -1,4 +1,4 @@
-// ./pages/AdminReportGenerator.js - WITH STUDENT PROFILE EXPORT (MONGODB ATLAS READY)
+// ./pages/AdminReportGenerator.js - WITH STUDENT PROFILE EXPORT
 
 import React, { useState } from "react";
 import axios from "axios";
@@ -9,9 +9,8 @@ import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, Tex
 import { saveAs } from "file-saver";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-// ✅ Add API base URL from environment variable
+// Add this right after all your imports and before FIELD_LABELS
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
-
 const FIELD_LABELS = {
   uce: "UCE/USN",
   Name: "Name",
@@ -272,10 +271,10 @@ const AdminReportGenerator = () => {
 
     setLoadingProfile(true);
     try {
-      // ✅ Use environment variable for API endpoint
-      const response = await axios.post(`${API_BASE_URL}/admin/student-profile`, {
-        uce: uceNumber.trim().toUpperCase()
-      });
+     const response = await axios.post(`${API_BASE_URL}/admin/student-profile`, {
+  uce: uceNumber.trim().toUpperCase()
+});
+      
      
       setStudentProfileData(response.data);
       console.log("✅ Student profile fetched:", response.data);
@@ -287,6 +286,10 @@ const AdminReportGenerator = () => {
       setLoadingProfile(false);
     }
   };
+
+ 
+
+ 
 
   const fetchReportForSubType = async (subType) => {
     // Build achievementFilters payload
@@ -344,7 +347,6 @@ const AdminReportGenerator = () => {
       }
     }
 
-    // ✅ Use environment variable for API endpoint
     const res = await axios.post(`${API_BASE_URL}/admin/report`, requestData);
     return res.data;
   };
@@ -803,6 +805,7 @@ const AdminReportGenerator = () => {
     const { student, achievements, academics } = studentProfileData;
     let csvContent = "";
 
+    // Student Information Section
     csvContent += "STUDENT INFORMATION\n";
     csvContent += "Field,Value\n";
     Object.entries(student).forEach(([key, value]) => {
@@ -812,6 +815,7 @@ const AdminReportGenerator = () => {
     });
     csvContent += "\n";
 
+    // Achievements Section
     if (achievements && achievements.length > 0) {
       csvContent += "ACHIEVEMENTS\n";
       csvContent += "Type,Category,Event/Course,Date,Level,Position,Prize\n";
@@ -821,6 +825,7 @@ const AdminReportGenerator = () => {
       csvContent += "\n";
     }
 
+    // Academic Records Section
     if (academics && academics.length > 0) {
       csvContent += "ACADEMIC RECORDS\n";
       csvContent += "Exam Type,School/College,Board/University,Percentage,Year\n";
@@ -848,11 +853,13 @@ const AdminReportGenerator = () => {
     const doc = new jsPDF();
     let yPosition = 20;
 
+    // Title
     doc.setFontSize(16);
     doc.setTextColor(138, 43, 226);
     doc.text(`Student Profile: ${student.name} (${student.uce})`, 14, yPosition);
     yPosition += 10;
 
+    // Student Information
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.text("Personal Information", 14, yPosition);
@@ -876,6 +883,7 @@ const AdminReportGenerator = () => {
 
     yPosition = doc.lastAutoTable.finalY + 10;
 
+    // Achievements
     if (achievements && achievements.length > 0) {
       doc.text(`Achievements (${achievements.length})`, 14, yPosition);
       yPosition += 5;
@@ -903,6 +911,7 @@ const AdminReportGenerator = () => {
       yPosition = doc.lastAutoTable.finalY + 10;
     }
 
+    // Academic Records
     if (academics && academics.length > 0) {
       if (yPosition > 250) {
         doc.addPage();
@@ -942,6 +951,7 @@ const AdminReportGenerator = () => {
     const { student, achievements, academics } = studentProfileData;
     const children = [];
 
+    // Title
     children.push(
       new Paragraph({
         text: `Student Profile: ${student.name} (${student.uce})`,
@@ -951,6 +961,7 @@ const AdminReportGenerator = () => {
       })
     );
 
+    // Student Information
     children.push(
       new Paragraph({
         text: "Personal Information",
@@ -989,6 +1000,7 @@ const AdminReportGenerator = () => {
       })
     );
 
+    // Achievements
     if (achievements && achievements.length > 0) {
       children.push(
         new Paragraph({
@@ -1037,6 +1049,7 @@ const AdminReportGenerator = () => {
       );
     }
 
+    // Academic Records
     if (academics && academics.length > 0) {
       children.push(
         new Paragraph({
@@ -1092,6 +1105,7 @@ const AdminReportGenerator = () => {
     saveAs(blob, `student_profile_${student.uce}_${new Date().toISOString().split("T")[0]}.docx`);
   };
 
+  // ✅ NEW - Pie Chart Colors
   const COLORS = {
     'Co-Curricular': '#8b5cf6',
     'Extra-Curricular': '#06b6d4',
@@ -1104,6 +1118,7 @@ const AdminReportGenerator = () => {
     '#06b6d4', '#22d3ee', '#67e8f9', '#a5f3fc', '#cffafe'
   ];
 
+  // ✅ NEW - Render Achievement Pie Chart
   const renderAchievementPieChart = () => {
     if (!studentProfileData || !studentProfileData.achievements || studentProfileData.achievements.length === 0) {
       return null;
@@ -1111,6 +1126,7 @@ const AdminReportGenerator = () => {
 
     const achievements = studentProfileData.achievements;
 
+    // If subtype chart is active
     if (showSubTypeChart && selectedAchievementType) {
       const subTypeData = {};
       achievements
@@ -1186,6 +1202,7 @@ const AdminReportGenerator = () => {
       );
     }
 
+    // Main chart - Achievement Types
     const typeData = {};
     achievements.forEach(ach => {
       const type = ach.type || 'Other';
@@ -1249,6 +1266,9 @@ const AdminReportGenerator = () => {
     );
   };
 
+  // ==============================
+  // RENDER FUNCTIONS
+  // ==============================
   const renderStudentProfile = () => {
   if (!studentProfileData) return null;
 
@@ -1262,6 +1282,7 @@ const AdminReportGenerator = () => {
       borderRadius: '8px',
       border: '2px solid #8a2be2'
     }}>
+      {/* Header with Profile Photo, Title, and Export Dropdown */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -1269,12 +1290,14 @@ const AdminReportGenerator = () => {
         marginBottom: '20px',
         gap: '20px'
       }}>
+        {/* Left side: Profile Photo + Title */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '20px',
           flex: 1
         }}>
+          {/* Profile Photo */}
           <div style={{
             width: '80px',
             height: '80px',
@@ -1298,11 +1321,13 @@ const AdminReportGenerator = () => {
             )}
           </div>
          
+          {/* Title */}
           <h2 style={{ color: '#8a2be2', margin: 0 }}>
             Student Profile: {student.name} ({student.uce})
           </h2>
         </div>
        
+        {/* Right side: Export Dropdown */}
         <select
           onChange={(e) => {
             const val = e.target.value;
@@ -1313,18 +1338,18 @@ const AdminReportGenerator = () => {
           }}
           className="export-dropdown"
           style={{
-            padding: '6px 12px',
-            fontSize: '13px',
-            backgroundColor: '#8a2be2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: '500',
-            flexShrink: 0,
-            minWidth: '100px',
-            maxWidth: '120px'
-          }}
+    padding: '6px 12px',
+    fontSize: '13px',
+    backgroundColor: '#8a2be2',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    flexShrink: 0,
+    minWidth: '100px',
+    maxWidth: '120px'
+  }}
         >
           <option value="">Export As...</option>
           <option value="csv">CSV</option>
@@ -1333,6 +1358,7 @@ const AdminReportGenerator = () => {
         </select>
       </div>
 
+      {/* Personal Information Card */}
       <div className="profile-card" style={{
         backgroundColor: 'white',
         padding: '15px',
@@ -1352,6 +1378,7 @@ const AdminReportGenerator = () => {
         </div>
       </div>
 
+      {/* Achievements Card */}
       {achievements && achievements.length > 0 && (
         <div className="achievements-card" style={{
           backgroundColor: 'white',
@@ -1395,6 +1422,7 @@ const AdminReportGenerator = () => {
         </div>
       )}
 
+      {/* Academic Records Card */}
       {academics && academics.length > 0 && (
         <div className="academics-card" style={{
           backgroundColor: 'white',
@@ -1429,12 +1457,13 @@ const AdminReportGenerator = () => {
                       {rec.marksheetUrl ? (
                         <a
                           href={`${API_BASE_URL}${rec.marksheetUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: '#8a2be2', textDecoration: 'none' }}
-                        >
-                          View PDF
-                        </a>
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{ color: '#8a2be2', textDecoration: 'none' }}
+>
+  View PDF
+</a>
+                        
                       ) : (
                         "No File"
                       )}
@@ -1447,6 +1476,7 @@ const AdminReportGenerator = () => {
         </div>
       )}
 
+      {/* Achievement Pie Chart */}
       {renderAchievementPieChart()}
     </div>
   );
@@ -1456,10 +1486,13 @@ const AdminReportGenerator = () => {
     if (!reportData || Object.keys(reportData).length === 0) return null;
    
     return Object.entries(reportData).map(([subType, data]) => {
+      // Combine student fields and achievement fields
       const studentFieldsToShow = ["uce", "Name", ...selectedStudentFields.filter(f => f !== "uce" && f !== "Name")];
       const achievementFields = getAchievementFields(selectedAchievementCategory, subType).filter(f => f !== "uce" && f !== "Name");
      
+      // Always add competitionLocation and level to displayed fields
       const dynamicFields = [];
+      // Determine which location field to show based on subType
       if (["Workshop", "Seminar/Webinar", "Other"].includes(subType)) {
         const locationField = subType === "Workshop" ? "workshopLocation"
           : subType === "Seminar/Webinar" ? "seminarLocation"
@@ -1471,6 +1504,7 @@ const AdminReportGenerator = () => {
         dynamicFields.push("competitionLocation");
       }
      
+      // Always add level field
       dynamicFields.push("level");
      
       const fields = [...studentFieldsToShow, ...dynamicFields, ...achievementFields];
@@ -1524,6 +1558,9 @@ const AdminReportGenerator = () => {
     });
   };
 
+  // ==============================
+  // JSX RETURN
+  // ==============================
   return (
     <div className="admin-report-generator">
       <div className="header">
@@ -1531,6 +1568,7 @@ const AdminReportGenerator = () => {
         <p>Select fields from different categories to generate comprehensive reports</p>
       </div>
 
+      {/* TAB NAVIGATION */}
       <div className="tab-navigation" style={{
         display: 'flex',
         gap: '10px',
@@ -1571,8 +1609,10 @@ const AdminReportGenerator = () => {
         </button>
       </div>
 
+      {/* TAB 1: REPORTS */}
       {activeTab === "reports" && (
         <>
+          {/* Date Range Filter */}
           <div className="date-filter-section">
             <h3>Date Range Filter</h3>
             <div className="date-inputs">
@@ -1595,6 +1635,7 @@ const AdminReportGenerator = () => {
             </div>
           </div>
 
+          {/* Student Profile Section */}
           <div className="section-card">
             <div className="section-header" onClick={() => toggleSection("studentProfile")}>
               <h3>Student Profile ({selectedStudentFields.length} selected)</h3>
@@ -1632,6 +1673,7 @@ const AdminReportGenerator = () => {
             )}
           </div>
 
+          {/* Achievement Section */}
           <div className="section-card">
             <div className="section-header" onClick={() => toggleSection("achievement")}>
               <h3>Achievement ({selectedAchievementFields.length} selected)</h3>
@@ -1639,6 +1681,7 @@ const AdminReportGenerator = () => {
             </div>
             {expandedSections.achievement && (
               <>
+                {/* Achievement Categories */}
                 <div className="category-buttons">
                   {Object.keys(achievementSubTypes).map(category => (
                     <button
@@ -1651,6 +1694,7 @@ const AdminReportGenerator = () => {
                   ))}
                 </div>
 
+                {/* Sub-types dropdown */}
                 {selectedAchievementCategory && (
                   <div className="subtype-selector">
                     <label>Select Activity Type:</label>
@@ -1674,6 +1718,7 @@ const AdminReportGenerator = () => {
                   </div>
                 )}
 
+                {/* Competition Location Filter dropdown */}
                 {selectedAchievementSubType && (
                   <div className="competition-location-filter-section" style={{ margin: "12px 0" }}>
                     <label style={{ marginRight: 8 }}>Competition Location:</label>
@@ -1681,7 +1726,7 @@ const AdminReportGenerator = () => {
                       value={competitionLocationFilter}
                       onChange={(e) => {
                         setCompetitionLocationFilter(e.target.value);
-                        setLevelFilter("ALL");
+                        setLevelFilter("ALL"); // Reset level when location changes
                       }}
                     >
                       <option value="ALL">ALL</option>
@@ -1691,6 +1736,7 @@ const AdminReportGenerator = () => {
                   </div>
                 )}
 
+                {/* Level Filter dropdown - only show when competition location is Within or Outside */}
                 {selectedAchievementSubType && (competitionLocationFilter === "Within" || competitionLocationFilter === "Outside") && (
                   <div className="level-filter-section" style={{ margin: "12px 0" }}>
                     <label style={{ marginRight: 8 }}>Level:</label>
@@ -1708,6 +1754,7 @@ const AdminReportGenerator = () => {
                   </div>
                 )}
 
+                {/* Position Filter dropdown */}
                 {selectedAchievementSubType && (
                   <div className="position-filter-section" style={{ margin: "12px 0" }}>
                     <label style={{ marginRight: 8 }}>Position Filter:</label>
@@ -1722,6 +1769,7 @@ const AdminReportGenerator = () => {
                   </div>
                 )}
 
+                {/* Fields for selected subtype with Select All/Clear All buttons */}
                 {selectedAchievementSubType && selectedAchievementSubType !== "ALL" && (
                   <>
                     <div className="select-all-section">
@@ -1756,6 +1804,7 @@ const AdminReportGenerator = () => {
             )}
           </div>
 
+          {/* Generate Report Button */}
           <div className="action-section">
             <button
               onClick={generateReport}
@@ -1766,10 +1815,12 @@ const AdminReportGenerator = () => {
             </button>
           </div>
 
+          {/* Report Tables */}
           {renderReportTables()}
         </>
       )}
 
+      {/* TAB 2: STUDENT PROFILE */}
       {activeTab === "studentProfile" && (
         <div className="student-profile-tab">
           <div className="section-card">

@@ -1,3 +1,5 @@
+//frontend/src/components/AnalyticsReports.js
+
 import { useEffect, useState } from "react";
 import { fetchSummary } from "../services/api";
 
