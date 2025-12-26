@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./AdminReport.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 const AdminReport = () => {
   const [fieldOptions, setFieldOptions] = useState({
     student: [],

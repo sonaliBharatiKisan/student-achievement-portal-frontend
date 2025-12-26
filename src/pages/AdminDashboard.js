@@ -6,7 +6,7 @@ import AchievementStats from "./AchievementStats";
 import axios from "axios";
 import "./AdminDashboard.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -17,6 +17,24 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ✅ TOKEN VERIFICATION - MOVED INSIDE COMPONENT
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      navigate("/");
+      return;
+    }
+    
+    // Verify token
+    axios.get(`${API_BASE_URL}/admin/verify`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).catch(err => {
+      console.error("Token invalid:", err);
+      localStorage.clear();
+      navigate("/");
+    });
+  }, [navigate]);
 
   useEffect(() => {
     const superAdminStatus = localStorage.getItem("isSuperAdmin") === "true";
@@ -108,7 +126,7 @@ function AdminDashboard() {
             onClick={() => setActiveTab("report")}
             className={`admin-nav-button ${activeTab === "report" ? "active" : ""}`}
           >
-            <span className="nav-icon"></span>
+            <span className="nav-icon">📊</span>
             <span>REPORT GENERATOR</span>
           </button>
 
@@ -116,7 +134,7 @@ function AdminDashboard() {
             onClick={() => setActiveTab("stats")}
             className={`admin-nav-button ${activeTab === "stats" ? "active" : ""}`}
           >
-            <span className="nav-icon"></span>
+            <span className="nav-icon">📈</span>
             <span>ACHIEVEMENT STATS</span>
           </button>
 
@@ -124,7 +142,7 @@ function AdminDashboard() {
             onClick={() => setActiveTab("ai")}
             className={`admin-nav-button ${activeTab === "ai" ? "active" : ""}`}
           >
-            <span className="nav-icon"></span>
+            <span className="nav-icon">🤖</span>
             <span>AI ANALYZER</span>
           </button>
 
@@ -133,7 +151,7 @@ function AdminDashboard() {
               onClick={() => setActiveTab("manage")}
               className={`admin-nav-button ${activeTab === "manage" ? "active" : ""}`}
             >
-              <span className="nav-icon"></span>
+              <span className="nav-icon">👥</span>
               <span>Manage Admins</span>
             </button>
           )}
@@ -141,7 +159,7 @@ function AdminDashboard() {
 
         {/* Logout Button */}
         <button onClick={handleLogout} className="admin-logout-button">
-          <span className="nav-icon"></span>
+          <span className="nav-icon">🚪</span>
           <span>LOGOUT</span>
         </button>
       </div>
