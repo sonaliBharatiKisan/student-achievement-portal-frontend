@@ -3,10 +3,16 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import AchievementForm from "../components/AchievementForm";
 
+// ✅ ADD THIS - Dynamic API Base URL
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  "https://student-achievement-portal-backend-2.onrender.com";
+
 function Achievements() {
   const [achievements, setAchievements] = useState([]);
   const [visibleCounts, setVisibleCounts] = useState({});
   const [editingAchievement, setEditingAchievement] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const email =
     localStorage.getItem("studentEmail") ||
@@ -15,14 +21,30 @@ function Achievements() {
     "guest@example.com";
 
   const fetchAchievements = async () => {
+    setIsLoading(true);
     try {
+      // ✅ FIXED - Use API_BASE_URL instead of localhost
       const res = await axios.get(
-        `http://localhost:5000/api/achievements/${email}`
+        `${API_BASE_URL}/api/achievements/${email}`,
+        {
+          timeout: 30000, // 30 seconds timeout
+        }
       );
       setAchievements(res.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);
+      if (err.code === 'ECONNABORTED') {
+        alert("Request timeout. Please check your internet connection.");
+      } else if (err.response) {
+        alert(`Server error: ${err.response.data?.message || 'Failed to fetch achievements'}`);
+      } else if (err.request) {
+        alert("Network error. Please check your connection and try again.");
+      } else {
+        alert("An error occurred while fetching achievements.");
+      }
       setAchievements([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -30,7 +52,7 @@ function Achievements() {
     fetchAchievements();
   }, []);
 
-  // ✅ Delete Achievement
+  // ✅ Delete Achievement - FIXED URL
   const handleDelete = async (achievementId) => {
     if (!window.confirm("Are you sure you want to delete this achievement?")) {
       return;
@@ -38,10 +60,18 @@ function Achievements() {
 
     try {
       const token = localStorage.getItem("token");
+      
+      if (!token) {
+        alert("Please login to continue");
+        return;
+      }
+
+      // ✅ FIXED - Use API_BASE_URL
       const res = await axios.delete(
-        `http://localhost:5000/api/achievements/${achievementId}`,
+        `${API_BASE_URL}/api/achievements/${achievementId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          timeout: 15000,
         }
       );
 
@@ -51,7 +81,7 @@ function Achievements() {
       }
     } catch (err) {
       console.error("Delete Error:", err);
-      alert("Failed to delete achievement");
+      alert(err.response?.data?.message || "Failed to delete achievement");
     }
   };
 
@@ -78,13 +108,6 @@ function Achievements() {
   };
 
   const renderDate = (ach) => {
-    console.group(`📅 Rendering date for: ${renderEventName(ach)}`);
-    console.log("Date Selection:", ach.dateSelection);
-    console.log("Event Date:", ach.eventDate);
-    console.log("Event From:", ach.eventFrom);
-    console.log("Event To:", ach.eventTo);
-    console.groupEnd();
-
     // ✅ Check for date range
     if (ach.dateSelection === "range") {
       if (ach.eventFrom && ach.eventTo) {
@@ -227,7 +250,7 @@ function Achievements() {
             }}
             title="Edit Achievement"
           >
-            ✏ Edit
+            ✏️ Edit
           </button>
           <button
             onClick={() => handleDelete(ach._id)}
@@ -242,7 +265,7 @@ function Achievements() {
             }}
             title="Delete Achievement"
           >
-            🗑 Delete
+            🗑️ Delete
           </button>
         </div>
       </td>
@@ -324,7 +347,12 @@ function Achievements() {
         onCancelEdit={handleCancelEdit}
       />
 
-      {Object.keys(groupedAchievements).length > 0 ? (
+      {/* ✅ Loading State */}
+      {isLoading ? (
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>Loading achievements...</p>
+        </div>
+      ) : Object.keys(groupedAchievements).length > 0 ? (
         <div>
           {Object.entries(groupedAchievements).map(([type, typeAchievements]) => {
             const visibleCount = visibleCounts[type] || 5;
