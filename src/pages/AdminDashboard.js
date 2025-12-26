@@ -1,3 +1,4 @@
+// frontend/src/components/AdminDashboard.js - FIXED VERSION
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminReportGenerator from "./AdminReportGenerator";
@@ -17,33 +18,60 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true); // ✅ NEW: Track verification state
 
-  // ✅ TOKEN VERIFICATION - MOVED INSIDE COMPONENT
+  // ✅ FIXED: Token verification only runs ONCE on mount
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      navigate("/");
-      return;
-    }
-    
-    // Verify token
-    axios.get(`${API_BASE_URL}/admin/verify`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).catch(err => {
-      console.error("Token invalid:", err);
-      localStorage.clear();
-      navigate("/");
-    });
-  }, [navigate]);
+    const verifyToken = async () => {
+      const token = localStorage.getItem("adminToken");
+      
+      if (!token) {
+        console.log("❌ No token found, redirecting to login");
+        navigate("/admin/login");
+        return;
+      }
 
-  useEffect(() => {
-    const superAdminStatus = localStorage.getItem("isSuperAdmin") === "true";
-    setIsSuperAdmin(superAdminStatus);
+      try {
+        setIsVerifying(true);
+        console.log("🔐 Verifying admin token...");
+        
+        const response = await axios.get(`${API_BASE_URL}/admin/verify`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000 // 10 second timeout
+        });
 
-    if (superAdminStatus) {
-      fetchAdmins();
-    }
-  }, []);
+        console.log("✅ Token verified successfully");
+        
+        // Set super admin status from verified response
+        const superAdminStatus = response.data.admin?.isSuperAdmin || 
+                                localStorage.getItem("isSuperAdmin") === "true";
+        setIsSuperAdmin(superAdminStatus);
+        
+        if (superAdminStatus) {
+          fetchAdmins();
+        }
+        
+        setIsVerifying(false);
+      } catch (err) {
+        console.error("❌ Token verification failed:", err);
+        
+        // Only redirect if it's an auth error (401, 403)
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          console.log("🔒 Invalid token, redirecting to login");
+          localStorage.clear();
+          navigate("/admin/login");
+        } else {
+          // For other errors (network, timeout), stay on page but show warning
+          console.warn("⚠️ Verification failed but token might still be valid");
+          const superAdminStatus = localStorage.getItem("isSuperAdmin") === "true";
+          setIsSuperAdmin(superAdminStatus);
+          setIsVerifying(false);
+        }
+      }
+    };
+
+    verifyToken();
+  }, []); // ✅ Empty dependency array - runs only once
 
   const fetchAdmins = async () => {
     try {
@@ -105,8 +133,25 @@ function AdminDashboard() {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminEmail");
     localStorage.removeItem("isSuperAdmin");
-    navigate("/");
+    navigate("/admin/login");
   };
+
+  // ✅ Show loading state during verification
+  if (isVerifying) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div className="loading-spinner"></div>
+        <p>Verifying authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-wrapper">
